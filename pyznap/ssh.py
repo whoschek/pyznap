@@ -162,7 +162,7 @@ class SSH:
 
         from pyznap.utils import exists
 
-        if exists('mbuffer', ssh=self):
+        if 'PYZNAP_DISABLE_MBUFFER' not in os.environ and exists('mbuffer', ssh=self):
             return lambda mem: ['mbuffer', '-q', '-s', '128K', '-m', '{:d}M'.format(mem)]
         else:
             return None
@@ -178,7 +178,7 @@ class SSH:
 
         from pyznap.utils import exists
 
-        if exists('pv', ssh=self):
+        if 'PYZNAP_DISABLE_PV' not in os.environ and exists('pv', ssh=self):
             return lambda size: ['pv', '-f', '-w', '100', '-s', str(size)]
         else:
             return None
