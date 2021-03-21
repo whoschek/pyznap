@@ -19,6 +19,7 @@ from .utils import read_config, create_config
 from .clean import clean_config
 from .take import take_config
 from .send import send_config
+from .process import set_dry_run
 
 
 DIRNAME = os.path.dirname(os.path.abspath(__file__))
@@ -60,6 +61,8 @@ def _main():
                         dest="verbose", help='print more verbose output')
     parser.add_argument('-t', '--trace', action="store_true",
                         dest="trace", help='print run tracing output')
+    parser.add_argument('-n', '--dry-run', action="store_true",
+                        dest="dry_run", help='only test run, no action taken')
     parser.add_argument('--config', action="store",
                         dest="config", help='path to config file')
     parser.add_argument('--pidfile', action="store",
@@ -120,6 +123,9 @@ def _main():
     logging.basicConfig(level=loglevel, format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%b %d %H:%M:%S', stream=sys.stdout)
     logger = logging.getLogger(__name__)
+
+    if args.dry_run:
+        set_dry_run()
 
     if args.pidfile is not None:
         if not check_pid(args.pidfile):

@@ -13,7 +13,7 @@ import sys
 import logging
 import subprocess as sp
 from shlex import quote
-from .process import check_output, DatasetNotFoundError, DatasetBusyError
+from .process import check_output, check_output_dry, set_dry_run, DatasetNotFoundError, DatasetBusyError
 from .utils import exists
 
 
@@ -136,7 +136,7 @@ def create(name, ssh=None, type='filesystem', props={}, force=False):
 
     cmd.append(name)
 
-    check_output(cmd, ssh=ssh)
+    check_output_dry(cmd, ssh=ssh)
 
     return ZFSFilesystem(name, ssh=ssh)
 
@@ -247,7 +247,7 @@ class ZFSDataset(object):
 
         cmd.append(self.name)
 
-        check_output(cmd, ssh=self.ssh)
+        check_output_dry(cmd, ssh=self.ssh)
 
     def snapshot(self, snapname, recursive=False, props={}):
         cmd = ['zfs', 'snapshot']
@@ -262,7 +262,7 @@ class ZFSDataset(object):
         name = self.name + '@' + snapname
         cmd.append(name)
 
-        check_output(cmd, ssh=self.ssh)
+        check_output_dry(cmd, ssh=self.ssh)
         return ZFSSnapshot(name, ssh=self.ssh)
 
     def receive_abort(self):
@@ -272,7 +272,7 @@ class ZFSDataset(object):
         cmd.append('-A')
         cmd.append(self.name)
 
-        check_output(cmd, ssh=self.ssh)
+        check_output_dry(cmd, ssh=self.ssh)
 
     # TODO: split force to allow -f, -r and -R to be specified individually
     def rollback(self, snapname, force=False):
@@ -301,7 +301,7 @@ class ZFSDataset(object):
         cmd.append(prop + '=' + str(value))
         cmd.append(self.name)
 
-        check_output(cmd, ssh=self.ssh)
+        check_output_dry(cmd, ssh=self.ssh)
 
     def delprop(self, prop, recursive=False):
         cmd = ['zfs', 'inherit']
@@ -312,7 +312,7 @@ class ZFSDataset(object):
         cmd.append(prop)
         cmd.append(self.name)
 
-        check_output(cmd, ssh=self.ssh)
+        check_output_dry(cmd, ssh=self.ssh)
 
     def userspace(self, *args, **kwargs):
         raise NotImplementedError()
@@ -480,7 +480,7 @@ class ZFSSnapshot(ZFSDataset):
         cmd.append(tag)
         cmd.append(self.name)
 
-        check_output(cmd, ssh=self.ssh)
+        check_output_dry(cmd, ssh=self.ssh)
 
     def holds(self):
         cmd = ['zfs', 'holds']
@@ -503,4 +503,4 @@ class ZFSSnapshot(ZFSDataset):
         cmd.append(tag)
         cmd.append(self.name)
 
-        check_output(cmd, ssh=self.ssh)
+        check_output_dry(cmd, ssh=self.ssh)

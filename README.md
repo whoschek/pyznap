@@ -171,6 +171,10 @@ Run `pyznap -h` to see all available options.
 
   Print runned commands
 
++ -n, --dry-run
+
+  Skip execution for commands changing filesystem.
+
 + setup [-p PATH]
 
   Initial setup. Creates a config dir and puts a sample config file there. You can specify the path

@@ -19,7 +19,7 @@ from time import sleep
 from .ssh import SSH, SSHException
 from .utils import parse_name, exists, check_recv, bytes_fmt
 import pyznap.pyzfs as zfs
-from .process import DatasetBusyError, DatasetNotFoundError, DatasetExistsError
+from .process import get_dry_run, DatasetBusyError, DatasetNotFoundError, DatasetExistsError
 
 
 def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=False, resume_token=None):
@@ -48,6 +48,12 @@ def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=F
     try:
         ssh_source = snapshot.ssh
         stream_size = snapshot.stream_size(base=base, raw=raw, resume_token=resume_token)
+
+        if get_dry_run():
+            logger.warning('DRY_RUN: send_snapshot {} --> {} base:{} size:{} resume_token:{}'.format(
+                snapshot.name, dest_name_log, base, stream_size, resume_token
+            ))
+            return 0
 
         send = snapshot.send(ssh_dest=ssh_dest, base=base, intermediates=True, raw=raw, resume_token=resume_token)
         recv = zfs.receive(name=dest_name, stdin=send.stdout, ssh=ssh_dest, ssh_source=ssh_source,

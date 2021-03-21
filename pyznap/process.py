@@ -14,6 +14,8 @@ import errno as _errno
 import subprocess as sp
 import socket
 
+DRY_RUN = False
+
 PIPE = sp.PIPE
 
 
@@ -69,6 +71,30 @@ class CompletedProcess(sp.CompletedProcess):
 
         # did not match known errors, defer to superclass
         super(CompletedProcess, self).check_returncode()
+
+
+def set_dry_run(dry_run=True):
+    """Set dry run flag"""
+    global DRY_RUN
+    DRY_RUN=dry_run
+    if DRY_RUN:
+        logger = logging.getLogger(__name__)
+        logger.warning('DRY_RUN: Ignoring filesystem modification.')
+
+def get_dry_run():
+    """Return dry run flag value"""
+    global DRY_RUN
+    return DRY_RUN
+
+
+def check_output_dry(*popenargs, timeout=None, ssh=None, **kwargs):
+    """Dry run wrapper for check_output"""
+    if DRY_RUN:
+        logger = logging.getLogger(__name__)
+        logger.warning('DRY_RUN: ({}) {}'.format(ssh, ' '.join(*popenargs)))
+        return None
+    else:
+        check_output(*popenargs, timeout=None, ssh=None, **kwargs)
 
 
 def check_output(*popenargs, timeout=None, ssh=None, **kwargs):
