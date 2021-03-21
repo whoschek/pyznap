@@ -86,7 +86,7 @@ def read_config(path):
     config = []
     options = ['key', 'frequent', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'snap', 'clean',
                'dest', 'dest_keys', 'compress', 'exclude', 'raw_send', 'resume', 'dest_auto_create',
-               'retries', 'retry_interval']
+               'retries', 'retry_interval', 'ignore_not_existing']
 
     for section in parser.sections():
         dic = {}
@@ -103,7 +103,7 @@ def read_config(path):
                     dic[option] = value if os.path.isfile(value) else None
                 elif option in ['frequent', 'hourly', 'daily', 'weekly', 'monthly', 'yearly']:
                     dic[option] = int(value)
-                elif option in ['snap', 'clean']:
+                elif option in ['snap', 'clean', 'ignore_not_existing']:
                     dic[option] = {'yes': True, 'no': False}.get(value.lower(), None)
                 elif option in ['dest', 'compress']:
                     dic[option] = [i.strip() for i in value.split(',')]
@@ -126,7 +126,7 @@ def read_config(path):
             child_parent = '/'.join(child['name'].split('/')[:-1])  # get parent of child filesystem
             if child_parent.startswith(parent['name']):
                 for option in ['key', 'frequent', 'hourly', 'daily', 'weekly', 'monthly', 'yearly',
-                               'snap', 'clean']:
+                               'snap', 'clean', 'ignore_not_existing']:
                     child[option] = child[option] if child[option] is not None else parent[option]
     # Sort by pathname
     config = sorted(config, key=lambda entry: entry['name'].split('/'))
