@@ -35,7 +35,7 @@ def take_snap(filesystem, _type):
 
     logger.info('Taking snapshot {}@{:s}...'.format(filesystem, snapname(_type)))
     try:
-        filesystem.snapshot(snapname=snapname(_type), recursive=True)
+        filesystem.snapshot(snapname=snapname(_type))
     except (DatasetBusyError, DatasetExistsError) as err:
         logger.error(err)
     except CalledProcessError as err:
@@ -167,9 +167,20 @@ def take_config(config):
         else:
             # Take recursive snapshot of parent filesystem
             take_filesystem(children[0], conf)
+            # Get subchild configurations names
+            sub_name_prefix = children[0].name+'/'
+            sub_config_names = list(map(lambda c: c['name'], filter(lambda c: c['name'].startswith(sub_name_prefix), config)))
             # Take snapshot of all children that don't have all snapshots yet
             for child in children[1:]:
-                take_filesystem(child, conf)
+                # exclude filesystems with own configuration
+                if ssh:
+                    child_name = 'ssh:{:d}:{:s}@{:s}:{:s}'.format(port, user, host, child.name)
+                else:
+                    child_name = child.name
+                if any(filter(lambda n: child_name == n or child_name.startswith(n+'/'), sub_config_names)):
+                    logger.log(8, 'Ignoring child {:s}, have own configuration.'.format(child_name))
+                else:
+                    take_filesystem(child, conf)
         finally:
             if ssh:
                 ssh.close()
