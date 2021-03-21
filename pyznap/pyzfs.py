@@ -196,6 +196,7 @@ def receive(name, stdin, ssh=None, ssh_source=None, append_name=False, append_pa
     # execute command with shell (sh or ssh)
     cmd = shell + [' '.join(cmd)]
 
+    logger.log(8, 'RUN: {}'.format(cmd))
     return sp.Popen(cmd, stdin=stdin, stderr=sp.PIPE) # zfs receive process
 
 
@@ -429,6 +430,7 @@ class ZFSSnapshot(ZFSDataset):
         # execute command with shell (sh or ssh)
         cmd = shell + [' '.join(cmd)]
 
+        logger.log(8, 'RUN: {}'.format(cmd))
         return sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.PIPE) # return zfs send process
 
     def stream_size(self, base=None, raw=False, resume_token=None):

@@ -163,9 +163,13 @@ Run `pyznap -h` to see all available options.
 
   Specify config file. Default is `/etc/pyznap/pyznap.conf`.
 
-+ -v, --versbose
++ -v, --verbose
 
   Print more verbose output.
+
++ -t, --trace
+
+  Print runned commands
 
 + setup [-p PATH]
 
