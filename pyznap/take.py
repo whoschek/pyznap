@@ -148,6 +148,8 @@ def take_config(config):
             ssh = None
             name_log = fsname
 
+        snap_exclude_property = conf['snap_exclude_property']
+
         try:
             # Children includes the base filesystem (named 'fsname')
             children = zfs.find(path=fsname, types=['filesystem', 'volume'], ssh=ssh)
@@ -166,7 +168,10 @@ def take_config(config):
             continue
         else:
             # Take recursive snapshot of parent filesystem
-            take_filesystem(children[0], conf)
+            if snap_exclude_property and children[0].ispropval(snap_exclude_property, check='false'):
+                logger.info('Ignore dataset {:s}, have property {:s}=false'.format(name_log, snap_exclude_property))
+            else:
+                take_filesystem(children[0], conf)
             # Get subchild configurations names
             sub_name_prefix = children[0].name+'/'
             sub_config_names = list(map(lambda c: c['name'], filter(lambda c: c['name'].startswith(sub_name_prefix), config)))
@@ -180,7 +185,10 @@ def take_config(config):
                 if any(filter(lambda n: child_name == n or child_name.startswith(n+'/'), sub_config_names)):
                     logger.log(8, 'Ignoring child {:s}, have own configuration.'.format(child_name))
                 else:
-                    take_filesystem(child, conf)
+                    if snap_exclude_property and child.ispropval(snap_exclude_property, check='false'):
+                        logger.info('Ignore dataset {:s}, have property {:s}=false'.format(child_name, snap_exclude_property))
+                    else:
+                        take_filesystem(child, conf)
         finally:
             if ssh:
                 ssh.close()

@@ -266,6 +266,8 @@ def send_config(config):
                          .format(source_name_log, err.stderr.rstrip()))
             continue
 
+        send_exclude_property = conf['snap_exclude_property']
+
         # Send to every backup destination
         for backup_dest in conf['dest']:
             # get exclude rules
@@ -331,6 +333,11 @@ def send_config(config):
                 if any(fnmatch(source_fs.name, pattern) for pattern in exclude):
                     logger.debug('Matched {} in exclude rules, not sending...'.format(source_fs))
                     continue
+                # check exclude atribute
+                if send_exclude_property and source_fs.ispropval(send_exclude_property, check='false'):
+                    logger.info('Not sending {}, have property {:s}=false'.format(source_fs, send_exclude_property))
+                    continue
+                # TODO: create missing skiped filesystem on destination
                 # send not excluded filesystems
                 for retry in range(1,retries+2):
                     rc = send_filesystem(source_fs, dest_name, ssh_dest=ssh_dest, raw=raw, resume=resume)

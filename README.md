@@ -132,27 +132,29 @@ If that is not the case just run
 
 Here is a list of all options you can set in the config fie:
 
-| Option                 | Input           | Description |
-|------------------------|-----------------|-------------|
-| `key`                  | String          | Path to ssh keyfile for source |
-| `frequent`             | Integer         | Number of frequent snapshots. These can be created every minute (whenever pyznap is called) |
-| `hourly`               | Integer         | Number of hourly snapshots |
-| `daily`                | Integer         | Number of daily snapshots |
-| `weekly`               | Integer         | Number of weekly snapshots |
-| `monthly`              | Integer         | Number of monthly snapshots |
-| `yearly`               | Integer         | Number of yearly snapshots |
-| `snap`                 | yes/no          | Should snapshots be taken |
-| `clean`                | yes/no          | Should snapshots be cleaned |
-| `ignore_not_existing`  | yes/no          | If filesystem not exist, make warning no error |
-| `dest`                 | List of string  | Comma-separated list of destinations where to send source filesystem |
-| `dest_key`             | List of string  | Path to ssh keyfile for dest. Comma-separated list for multiple dest |
-| `compress`             | List of string  | Compression to use over ssh, supported are gzip, lzop, bzip2, pigz, xz & lz4. Default is lzop. Comma-separated list for multiple dest |    
-| `exclude`              | List of string  | Whitespace-separated list of datasets to exclude from sending. Exclude lists for different dests are separated by comma |
-| `raw_send`             | List of yes/no  | Use zfs raw send. Comma-separated list for multiple dest |
-| `resume`               | List of yes/no  | Use resumable send/receive. Comma-separated list for multiple dest |
-| `dest_auto_create`     | List of yes/no  | Automatically create missing root datasets. Comma-separated list for multiple dest |
-| `retries`              | List of integer | Number of retries on connection issues. Comma-separated list for multiple dest |
-| `retry_interval`       | List of integer | Time in seconds between retries. Comma-separated list for multiple dest |
+| Option                  | Input           | Description |
+|-------------------------|-----------------|-------------|
+| `key`                   | String          | Path to ssh keyfile for source |
+| `frequent`              | Integer         | Number of frequent snapshots. These can be created every minute (whenever pyznap is called) |
+| `hourly`                | Integer         | Number of hourly snapshots |
+| `daily`                 | Integer         | Number of daily snapshots |
+| `weekly`                | Integer         | Number of weekly snapshots |
+| `monthly`               | Integer         | Number of monthly snapshots |
+| `yearly`                | Integer         | Number of yearly snapshots |
+| `snap`                  | yes/no          | Should snapshots be taken |
+| `clean`                 | yes/no          | Should snapshots be cleaned |
+| `ignore_not_existing`   | yes/no          | If filesystem not exist, make warning no error |
+| `snap_exclude_property` | String          | Name of filesystem zfs property for ignoring create/lear snaphots (value="com.sun:auto-snapshot" mimic zfs-auto-snapshot behavior) |
+| `send_exclude_property` | String          | Name of filesystem zfs property for ignoring sending snaphot |
+| `dest`                  | List of string  | Comma-separated list of destinations where to send source filesystem |
+| `dest_key`              | List of string  | Path to ssh keyfile for dest. Comma-separated list for multiple dest |
+| `compress`              | List of string  | Compression to use over ssh, supported are gzip, lzop, bzip2, pigz, xz & lz4. Default is lzop. Comma-separated list for multiple dest |    
+| `exclude`               | List of string  | Whitespace-separated list of datasets to exclude from sending. Exclude lists for different dests are separated by comma |
+| `raw_send`              | List of yes/no  | Use zfs raw send. Comma-separated list for multiple dest |
+| `resume`                | List of yes/no  | Use resumable send/receive. Comma-separated list for multiple dest |
+| `dest_auto_create`      | List of yes/no  | Automatically create missing root datasets. Comma-separated list for multiple dest |
+| `retries`               | List of integer | Number of retries on connection issues. Comma-separated list for multiple dest |
+| `retry_interval`        | List of integer | Time in seconds between retries. Comma-separated list for multiple dest |
 
 
 #### Command line options ####

@@ -292,8 +292,12 @@ class ZFSDataset(object):
         return findprops(self.name, ssh=self.ssh, max_depth=0, props=[prop])[self.name].get(prop, None)
 
     def getpropval(self, prop, default=None):
-        value = self.getprop(prop)['value']
+        value = self.getprop(prop)[0]
         return default if value == '-' else value
+
+    def ispropval(self, prop, check='true'):
+        value = self.getpropval(prop, default='')
+        return value.lower() == check
 
     def setprop(self, prop, value):
         cmd = ['zfs', 'set']

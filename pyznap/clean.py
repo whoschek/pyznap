@@ -131,6 +131,8 @@ def clean_config(config):
             ssh = None
             name_log = fsname
 
+        snap_exclude_property = conf['snap_exclude_property']
+
         try:
             # Children includes the base filesystem (named 'fsname')
             children = zfs.find(path=fsname, types=['filesystem', 'volume'], ssh=ssh)
@@ -148,7 +150,10 @@ def clean_config(config):
                          .format(name_log, err.stderr.rstrip()))
         else:
             # Clean snapshots of parent filesystem
-            clean_filesystem(children[0], conf)
+            if snap_exclude_property and children[0].ispropval(snap_exclude_property, check='false'):
+                logger.info('Ignore dataset {:s}, have property {:s}=false'.format(name_log, snap_exclude_property))
+            else:
+                clean_filesystem(children[0], conf)
             # Clean snapshots of all children that don't have a seperate config entry
             for child in children[1:]:
                 # Check if any of the parents (but child of base filesystem) have a config entry
@@ -165,7 +170,10 @@ def clean_config(config):
                         (parent_name in [entry['name'] for entry in config])):
                         break
                 else:
-                    clean_filesystem(child, conf)
+                    if snap_exclude_property and child.ispropval(snap_exclude_property, check='false'):
+                        logger.info('Ignore dataset {:s}, have property {:s}=false'.format(child_name, snap_exclude_property))
+                    else:
+                        clean_filesystem(child, conf)
         finally:
             if ssh:
                 ssh.close()
