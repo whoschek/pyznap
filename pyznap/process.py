@@ -8,6 +8,7 @@
     :license: GPLv3, see LICENSE for more details.
 """
 
+import logging
 import re
 import errno as _errno
 import subprocess as sp
@@ -135,9 +136,12 @@ def run(*popenargs, timeout=None, check=False, ssh=None, **kwargs):
         Return instance of CompletedProcess with given return code, stdout and stderr
     """
 
+    logger = logging.getLogger(__name__)
+
     if ssh:
         popenargs = (ssh.cmd + popenargs[0], *popenargs[1:])
 
+    logger.log(8, "RUN: {:s}".format(' '.join(*popenargs)))
     with sp.Popen(*popenargs, **kwargs) as process:
         try:
             stdout, stderr = process.communicate(timeout=timeout)

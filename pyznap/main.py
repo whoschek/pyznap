@@ -58,6 +58,8 @@ def _main():
     parser = ArgumentParser(prog='pyznap', description='ZFS snapshot tool written in python')
     parser.add_argument('-v', '--verbose', action="store_true",
                         dest="verbose", help='print more verbose output')
+    parser.add_argument('-t', '--trace', action="store_true",
+                        dest="trace", help='print run tracing output')
     parser.add_argument('--config', action="store",
                         dest="config", help='path to config file')
     parser.add_argument('--pidfile', action="store",
@@ -112,6 +114,9 @@ def _main():
 
 
     loglevel = logging.DEBUG if args.verbose else logging.INFO
+    if args.trace:
+        logging.addLevelName(8, 'TRACE')
+        loglevel = 8
     logging.basicConfig(level=loglevel, format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%b %d %H:%M:%S', stream=sys.stdout)
     logger = logging.getLogger(__name__)
