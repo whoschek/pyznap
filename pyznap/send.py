@@ -8,7 +8,6 @@
     :license: GPLv3, see LICENSE for more details.
 """
 
-
 import sys
 import logging
 from io import TextIOWrapper
@@ -325,8 +324,11 @@ def send_config(config):
                 continue
 
             # Match children on source to children on dest
-            dest_children_names = [child.name.replace(source_name, dest_name) for
-                                   child in source_children]
+            if source_name == '':
+                dest_children_names = [dest_name+'/'+child.name for child in source_children]
+            else:
+                dest_children_names = [child.name.replace(source_name, dest_name) for
+                                    child in source_children]
             # Send all children to corresponding children on dest
             for source_fs, dest_name in zip(source_children, dest_children_names):
                 # exclude filesystems from rules

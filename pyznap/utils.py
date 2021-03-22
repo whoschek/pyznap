@@ -92,7 +92,7 @@ def read_config(path):
     for section in parser.sections():
         dic = {}
         config.append(dic)
-        dic['name'] = section
+        dic['name'] = '' if section == '//' else section
 
         for option in options:
             try:

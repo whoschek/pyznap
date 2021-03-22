@@ -70,6 +70,8 @@ config for your system might look like this (remove the comments):
     dest = backup/filesystem              # Backup this filesystem on this location
     exclude = rpool/filesystem/data/*     # Exclude these datasets for pyznap send
 
+Special filesystem name `//` process all zpools.
+
 Then set up a cronjob by creating a file under `/etc/cron.d/`
 
     nano /etc/cron.d/pyznap
