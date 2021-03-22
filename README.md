@@ -179,6 +179,10 @@ Run `pyznap -h` to see all available options.
 
   Print runned commands, override verbose and quiet
 
++ --syslog
+
+  It also logs to the syslog
+
 + -n, --dry-run
 
   Skip execution for commands changing filesystem.

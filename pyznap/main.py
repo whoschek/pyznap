@@ -67,6 +67,8 @@ def _main():
                         dest="config", help='path to config file')
     parser.add_argument('--pidfile', action="store",
                         dest="pidfile", default=None, help='path to pid file')
+    parser.add_argument('--syslog', action="store_true",
+                        dest="syslog", help='set logging to syslog')
     parser.add_argument('-q', '--quiet', action="store_true",
                         dest="quiet", help='quiet logging, only errors shown')
     subparsers = parser.add_subparsers(dest='command')
@@ -127,6 +129,13 @@ def _main():
     logging.basicConfig(level=loglevel, format='%(asctime)s %(levelname)s: %(message)s',
                         datefmt='%b %d %H:%M:%S', stream=sys.stdout)
     logger = logging.getLogger(__name__)
+
+    if args.syslog:
+        # setup logging to syslog
+        root_logger = logging.getLogger()
+        syslog_handler = logging.handlers.SysLogHandler(address = '/dev/log')
+        syslog_handler.setFormatter(logging.Formatter('%(name)s: [%(levelname)s] %(message)s'))
+        root_logger.addHandler(syslog_handler)
 
     if args.dry_run:
         set_dry_run()
