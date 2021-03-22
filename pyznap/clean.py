@@ -151,7 +151,7 @@ def clean_config(config):
         else:
             # Clean snapshots of parent filesystem
             if snap_exclude_property and children[0].ispropval(snap_exclude_property, check='false'):
-                logger.info('Ignore dataset {:s}, have property {:s}=false'.format(name_log, snap_exclude_property))
+                logger.debug('Ignore dataset {:s}, have property {:s}=false'.format(name_log, snap_exclude_property))
             else:
                 clean_filesystem(children[0], conf)
             # Clean snapshots of all children that don't have a seperate config entry
@@ -171,7 +171,7 @@ def clean_config(config):
                         break
                 else:
                     if snap_exclude_property and child.ispropval(snap_exclude_property, check='false'):
-                        logger.info('Ignore dataset {:s}, have property {:s}=false'.format(child_name, snap_exclude_property))
+                        logger.debug('Ignore dataset {:s}, have property {:s}=false'.format(child_name, snap_exclude_property))
                     else:
                         clean_filesystem(child, conf)
         finally:

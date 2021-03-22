@@ -337,7 +337,7 @@ def send_config(config):
                     continue
                 # check exclude atribute
                 if send_exclude_property and source_fs.ispropval(send_exclude_property, check='false'):
-                    logger.info('Not sending {}, have property {:s}=false'.format(source_fs, send_exclude_property))
+                    logger.debug('Not sending {}, have property {:s}=false'.format(source_fs, send_exclude_property))
                     continue
                 # TODO: create missing skiped filesystem on destination
                 # send not excluded filesystems

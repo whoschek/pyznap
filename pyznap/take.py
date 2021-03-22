@@ -169,7 +169,7 @@ def take_config(config):
         else:
             # Take recursive snapshot of parent filesystem
             if snap_exclude_property and children[0].ispropval(snap_exclude_property, check='false'):
-                logger.info('Ignore dataset {:s}, have property {:s}=false'.format(name_log, snap_exclude_property))
+                logger.debug('Ignore dataset {:s}, have property {:s}=false'.format(name_log, snap_exclude_property))
             else:
                 take_filesystem(children[0], conf)
             # Get subchild configurations names
@@ -186,7 +186,7 @@ def take_config(config):
                     logger.log(8, 'Ignoring child {:s}, have own configuration.'.format(child_name))
                 else:
                     if snap_exclude_property and child.ispropval(snap_exclude_property, check='false'):
-                        logger.info('Ignore dataset {:s}, have property {:s}=false'.format(child_name, snap_exclude_property))
+                        logger.debug('Ignore dataset {:s}, have property {:s}=false'.format(child_name, snap_exclude_property))
                     else:
                         take_filesystem(child, conf)
         finally:
