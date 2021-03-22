@@ -120,22 +120,36 @@ def _main():
     args = parser.parse_args()
 
 
-    loglevel = logging.DEBUG if args.verbose else logging.INFO
+    loglevel =  logging.INFO
     if args.quiet:
         loglevel = logging.ERROR
+    if args.verbose:
+        loglevel = logging.DEBUG
     if args.trace:
         logging.addLevelName(8, 'TRACE')
         loglevel = 8
-    logging.basicConfig(level=loglevel, format='%(asctime)s %(levelname)s: %(message)s',
-                        datefmt='%b %d %H:%M:%S', stream=sys.stdout)
-    logger = logging.getLogger(__name__)
+
+    basicloglevel = min(loglevel, logging.INFO) if args.syslog else loglevel
+    # logging.basicConfig(level=basicloglevel)
+    root_logger = logging.getLogger()
+    root_logger.setLevel(basicloglevel)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s',
+        datefmt='%b %d %H:%M:%S'))
+    console_handler.setLevel(loglevel)
+    root_logger.addHandler(console_handler)
 
     if args.syslog:
         # setup logging to syslog
-        root_logger = logging.getLogger()
-        syslog_handler = logging.handlers.SysLogHandler(address = '/dev/log')
-        syslog_handler.setFormatter(logging.Formatter('%(name)s: [%(levelname)s] %(message)s'))
+        syslog_handler = logging.handlers.SysLogHandler(address = '/dev/log',
+            facility=logging.handlers.SysLogHandler.LOG_DAEMON)
+        syslog_handler.setFormatter(logging.Formatter('pyznap: [%(levelname)s] %(message)s'))
+        # syslog always level INFO
+        syslog_handler.setLevel(logging.INFO)
         root_logger.addHandler(syslog_handler)
+
+    logger = logging.getLogger(__name__)
 
     if args.dry_run:
         set_dry_run()

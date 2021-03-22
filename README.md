@@ -181,7 +181,7 @@ Run `pyznap -h` to see all available options.
 
 + --syslog
 
-  It also logs to the syslog
+  It also logs to the syslog with level INFO
 
 + -n, --dry-run
 
