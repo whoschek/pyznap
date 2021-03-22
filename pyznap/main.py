@@ -67,6 +67,8 @@ def _main():
                         dest="config", help='path to config file')
     parser.add_argument('--pidfile', action="store",
                         dest="pidfile", default=None, help='path to pid file')
+    parser.add_argument('-q', '--quiet', action="store_true",
+                        dest="quiet", help='quiet logging, only errors shown')
     subparsers = parser.add_subparsers(dest='command')
 
     parser_setup = subparsers.add_parser('setup', help='initial setup')
@@ -117,6 +119,8 @@ def _main():
 
 
     loglevel = logging.DEBUG if args.verbose else logging.INFO
+    if args.quiet:
+        loglevel = logging.ERROR
     if args.trace:
         logging.addLevelName(8, 'TRACE')
         loglevel = 8

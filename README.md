@@ -171,9 +171,13 @@ Run `pyznap -h` to see all available options.
 
   Print more verbose output.
 
++ -q, --quiet
+
+  Only error shown
+
 + -t, --trace
 
-  Print runned commands
+  Print runned commands, override verbose and quiet
 
 + -n, --dry-run
 
