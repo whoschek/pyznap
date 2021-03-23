@@ -100,6 +100,9 @@ def findprops(path=None, ssh=None, max_depth=None, props=['all'], sources=[], ty
 # Factory function for dataset objects
 def open(name, ssh=None, type=None):
     """Opens a volume, filesystem or snapshot"""
+    if name == '':
+        raise ValueError('blank dataset name')
+
     if type is None:
         type = findprops(name, ssh=ssh, max_depth=0, props=['type'])[name]['type'][0]
 
