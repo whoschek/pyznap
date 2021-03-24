@@ -36,6 +36,9 @@ setup(
     packages=['pyznap'],
     include_package_data=True,
     python_requires='>=3.5',
+    install_requires=[
+        'psutil'
+    ],
     extras_require={
         'dev': [
             'pytest',
