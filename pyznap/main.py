@@ -73,6 +73,8 @@ def _main():
                         dest="quiet", help='quiet logging, only errors shown')
     subparsers = parser.add_subparsers(dest='command')
 
+    subparsers.add_parser('full', help='full cycle: snap --take / send / snap --clean')
+
     parser_setup = subparsers.add_parser('setup', help='initial setup')
     parser_setup.add_argument('-p', '--path', action='store',
                               dest='path', help='pyznap config dir. default is {:s}'.format(CONFIG_DIR))
@@ -162,7 +164,7 @@ def _main():
     try:
         logger.info('Starting pyznap...')
 
-        if args.command in ('snap', 'send'):
+        if args.command in ('snap', 'send', 'full'):
             config_path = args.config if args.config else os.path.join(CONFIG_DIR, 'pyznap.conf')
             config = read_config(config_path)
             if config == None:
@@ -171,6 +173,11 @@ def _main():
         if args.command == 'setup':
             path = args.path if args.path else CONFIG_DIR
             create_config(path)
+
+        elif args.command == 'full':
+            take_config(config)
+            send_config(config)
+            clean_config(config)
 
         elif args.command == 'snap':
             # Default if no args are given

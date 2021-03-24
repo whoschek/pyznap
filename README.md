@@ -231,6 +231,11 @@ Run `pyznap -h` to see all available options.
     retry interval with `--retry-interval`. Normally pyznap will not create missing root datasets,
     but you can set the `--dest-auto-create` flag to automatically create it.
 
++ full
+
+  Do full cycle: snap --take / send / snap --clean
+
+
 
 #### Usage examples ####
 
