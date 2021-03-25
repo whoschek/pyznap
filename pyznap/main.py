@@ -21,6 +21,7 @@ from .take import take_config
 from .send import send_config
 from .process import set_dry_run
 import pyznap.pyzfs as zfs
+from . import __version__
 
 
 DIRNAME = os.path.dirname(os.path.abspath(__file__))
@@ -57,7 +58,7 @@ def _main():
         Exit code
     """
 
-    parser = ArgumentParser(prog='pyznap', description='ZFS snapshot tool written in python')
+    parser = ArgumentParser(prog='pyznap', description='ZFS snapshot tool written in python (version='+__version__+')')
     parser.add_argument('-q', '--quiet', action="store_true",
                         dest="quiet", help='quiet logging, only errors shown (WARNING)')
     parser.add_argument('-v', '--verbose', action="store_true",
@@ -72,6 +73,8 @@ def _main():
                         dest="config", help='path to config file')
     parser.add_argument('--pidfile', action="store",
                         dest="pidfile", default=None, help='path to pid file')
+    parser.add_argument('-V', '--version', action="store_true",
+                        dest="version", help='print version number')
 
     subparsers = parser.add_subparsers(dest='command')
 
@@ -122,6 +125,10 @@ def _main():
         parser.print_help(sys.stderr)
         sys.exit(1)
     args = parser.parse_args()
+
+    if args.version:
+        print(__version__)
+        sys.exit()
 
 
     loglevel =  logging.INFO

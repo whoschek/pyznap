@@ -187,6 +187,10 @@ Run `pyznap -h` to see all available options.
 
   Skip execution for commands changing filesystem.
 
++ -V, --version
+
+  Print yhis pyznap version
+
 + setup [-p PATH]
 
   Initial setup. Creates a config dir and puts a sample config file there. You can specify the path
