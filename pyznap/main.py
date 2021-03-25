@@ -130,6 +130,10 @@ def _main():
         print(__version__)
         sys.exit()
 
+    if not args.command:
+        print('ERROR: No command specified.\n')
+        parser.print_help(sys.stderr)
+        sys.exit(1)
 
     loglevel =  logging.INFO
     if args.quiet:
