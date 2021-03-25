@@ -47,6 +47,7 @@ def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=F
     try:
         ssh_source = snapshot.ssh
         stream_size = snapshot.stream_size(base=base, raw=raw, resume_token=resume_token)
+        zfs.STATS.add('send_size', stream_size)
 
         if get_dry_run():
             logger.warning('DRY_RUN: send_snapshot {} --> {} base:{} size:{} resume_token:{}'.format(

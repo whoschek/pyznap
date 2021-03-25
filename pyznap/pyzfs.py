@@ -32,6 +32,23 @@ else:
     PV = None
 
 
+class STATS:
+    data = {}
+    
+    @classmethod
+    def add(cls, name, value=1):
+        if name in cls.data:
+            cls.data[name] += value
+        else:
+            cls.data[name] = value
+
+    @classmethod
+    def log(cls):
+        logger = logging.getLogger(__name__)
+        logger.info('STATS: '+str(cls.data))
+
+
+
 def find(path=None, ssh=None, max_depth=None, types=[]):
     """Lists filesystems and snapshots for a given path"""
     cmd = ['zfs', 'list']
@@ -139,6 +156,7 @@ def create(name, ssh=None, type='filesystem', props={}, force=False):
 
     cmd.append(name)
 
+    STATS.add('zfs_create')
     check_output_dry(cmd, ssh=ssh)
 
     return ZFSFilesystem(name, ssh=ssh)
@@ -250,6 +268,7 @@ class ZFSDataset(object):
 
         cmd.append(self.name)
 
+        STATS.add('zfs_destroy/'+self.__class__.__name__)
         check_output_dry(cmd, ssh=self.ssh)
 
     def snapshot(self, snapname, recursive=False, props={}):
@@ -265,6 +284,7 @@ class ZFSDataset(object):
         name = self.name + '@' + snapname
         cmd.append(name)
 
+        STATS.add('zfs_snapshot')
         check_output_dry(cmd, ssh=self.ssh)
         return ZFSSnapshot(name, ssh=self.ssh)
 
@@ -308,6 +328,7 @@ class ZFSDataset(object):
         cmd.append(prop + '=' + str(value))
         cmd.append(self.name)
 
+        STATS.add('zfs_set')
         check_output_dry(cmd, ssh=self.ssh)
 
     def delprop(self, prop, recursive=False):
@@ -319,6 +340,7 @@ class ZFSDataset(object):
         cmd.append(prop)
         cmd.append(self.name)
 
+        STATS.add('zfs_set')
         check_output_dry(cmd, ssh=self.ssh)
 
     def userspace(self, *args, **kwargs):
@@ -371,6 +393,7 @@ class ZFSSnapshot(ZFSDataset):
 
         # get the size of the snapshot to send
         stream_size = self.stream_size(base=base, raw=raw, resume_token=resume_token)
+        stats.sum('send_size', stream_size)
         # use minimal mbuffer size of 1 and maximal size of 512 (256 over ssh)
         mbuff_size = min(max(stream_size // 1024**2, 1), 256 if (self.ssh or ssh_dest) else 512)
 
@@ -487,6 +510,7 @@ class ZFSSnapshot(ZFSDataset):
         cmd.append(tag)
         cmd.append(self.name)
 
+        STATS.add('zfs_hold')
         check_output_dry(cmd, ssh=self.ssh)
 
     def holds(self):
@@ -510,4 +534,5 @@ class ZFSSnapshot(ZFSDataset):
         cmd.append(tag)
         cmd.append(self.name)
 
+        STATS.add('zfs_release')
         check_output_dry(cmd, ssh=self.ssh)

@@ -20,6 +20,7 @@ from .clean import clean_config
 from .take import take_config
 from .send import send_config
 from .process import set_dry_run
+import pyznap.pyzfs as zfs
 
 
 DIRNAME = os.path.dirname(os.path.abspath(__file__))
@@ -228,6 +229,7 @@ def _main():
             else:
                 send_config(config)
 
+        zfs.STATS.log()
         logger.info('Finished successfully...\n')
     finally:
         if args.pidfile is not None:
