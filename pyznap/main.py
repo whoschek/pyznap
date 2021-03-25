@@ -58,23 +58,22 @@ def _main():
     """
 
     parser = ArgumentParser(prog='pyznap', description='ZFS snapshot tool written in python')
+    parser.add_argument('-q', '--quiet', action="store_true",
+                        dest="quiet", help='quiet logging, only errors shown (WARNING)')
     parser.add_argument('-v', '--verbose', action="store_true",
-                        dest="verbose", help='print more verbose output')
+                        dest="verbose", help='print more verbose output (DEBUG)')
     parser.add_argument('-t', '--trace', action="store_true",
-                        dest="trace", help='print run tracing output')
+                        dest="trace", help='print run tracing output (TRACE)')
     parser.add_argument('-n', '--dry-run', action="store_true",
                         dest="dry_run", help='only test run, no action taken')
+    parser.add_argument('--syslog', action="store_true",
+                        dest="syslog", help='add logging to syslog (INFO)')
     parser.add_argument('--config', action="store",
                         dest="config", help='path to config file')
     parser.add_argument('--pidfile', action="store",
                         dest="pidfile", default=None, help='path to pid file')
-    parser.add_argument('--syslog', action="store_true",
-                        dest="syslog", help='set logging to syslog')
-    parser.add_argument('-q', '--quiet', action="store_true",
-                        dest="quiet", help='quiet logging, only errors shown')
-    subparsers = parser.add_subparsers(dest='command')
 
-    subparsers.add_parser('full', help='full cycle: snap --take / send / snap --clean')
+    subparsers = parser.add_subparsers(dest='command')
 
     parser_setup = subparsers.add_parser('setup', help='initial setup')
     parser_setup.add_argument('-p', '--path', action='store',
@@ -116,6 +115,8 @@ def _main():
     parser_send.add_argument('--retry-interval', action="store", type=int,
                              dest='retry_interval', default=10,
                              help='interval in seconds between retries. default is 10')
+
+    subparsers.add_parser('full', help='full cycle: snap --take / send / snap --clean')
 
     if len(sys.argv)==1:
         parser.print_help(sys.stderr)
