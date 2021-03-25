@@ -108,6 +108,13 @@ class SSH:
         self.pv = self.setup_pv()
 
 
+    def __str__(self):
+        return '{:s}@{:s}:{:d}'.format(self.user, self.host, self.port)
+
+    def __repr__(self):
+        return '{:s}@{:s}:{:d}'.format(self.user, self.host, self.port)
+
+
     def setup_compression(self, _type):
         """Checks if compression algo is available on source and dest.
 

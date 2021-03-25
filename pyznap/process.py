@@ -94,7 +94,7 @@ def check_output_dry(*popenargs, timeout=None, ssh=None, **kwargs):
         logger.warning('DRY_RUN: ({}) {}'.format(ssh, ' '.join(*popenargs)))
         return None
     else:
-        check_output(*popenargs, timeout=None, ssh=None, **kwargs)
+        check_output(*popenargs, timeout=timeout, ssh=ssh, **kwargs)
 
 
 def check_output(*popenargs, timeout=None, ssh=None, **kwargs):
