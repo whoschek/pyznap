@@ -12,6 +12,7 @@
 import sys
 import os
 import logging
+from errorhandler import ErrorHandler
 from logging.config import fileConfig
 from argparse import ArgumentParser
 from datetime import datetime
@@ -135,6 +136,8 @@ def _main():
         parser.print_help(sys.stderr)
         sys.exit(1)
 
+    e = ErrorHandler()
+
     loglevel =  logging.INFO
     if args.quiet:
         loglevel = logging.ERROR
@@ -246,7 +249,7 @@ def _main():
     finally:
         if args.pidfile is not None:
             os.unlink(args.pidfile)
-    return 0
+    return 1 if e.fired else 0
 
 
 def main():
