@@ -393,7 +393,7 @@ class ZFSSnapshot(ZFSDataset):
 
         # get the size of the snapshot to send
         stream_size = self.stream_size(base=base, raw=raw, resume_token=resume_token)
-        stats.sum('send_size', stream_size)
+
         # use minimal mbuffer size of 1 and maximal size of 512 (256 over ssh)
         mbuff_size = min(max(stream_size // 1024**2, 1), 256 if (self.ssh or ssh_dest) else 512)
 
