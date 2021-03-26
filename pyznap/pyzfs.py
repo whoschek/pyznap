@@ -14,7 +14,7 @@ import logging
 import subprocess as sp
 from shlex import quote
 from .process import check_output, check_output_dry, set_dry_run, DatasetNotFoundError, DatasetBusyError
-from .utils import exists
+from .utils import exists, bytes_fmt
 
 
 SHELL = ['sh', '-c']
@@ -46,6 +46,8 @@ class STATS:
     def log(cls):
         logger = logging.getLogger(__name__)
         logger.info('STATS: '+str(cls.data))
+        if 'send_size' in cls.data:
+            logger.info('SEND_SIZE: '+bytes_fmt(cls.data['send_size']))
 
 
 
@@ -393,6 +395,7 @@ class ZFSSnapshot(ZFSDataset):
 
         # get the size of the snapshot to send
         stream_size = self.stream_size(base=base, raw=raw, resume_token=resume_token)
+        STATS.add('send_size', stream_size)
 
         # use minimal mbuffer size of 1 and maximal size of 512 (256 over ssh)
         mbuff_size = min(max(stream_size // 1024**2, 1), 256 if (self.ssh or ssh_dest) else 512)
