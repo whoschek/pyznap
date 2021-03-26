@@ -140,7 +140,7 @@ def _main():
 
     loglevel =  logging.INFO
     if args.quiet:
-        loglevel = logging.ERROR
+        loglevel = logging.WARNING
     if args.verbose:
         loglevel = logging.DEBUG
     if args.trace:
@@ -152,11 +152,17 @@ def _main():
     root_logger = logging.getLogger()
     root_logger.setLevel(basicloglevel)
 
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s',
-        datefmt='%b %d %H:%M:%S'))
-    console_handler.setLevel(loglevel)
-    root_logger.addHandler(console_handler)
+    console_fmt = logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt='%b %d %H:%M:%S')
+    if loglevel < logging.WARNING:
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(console_fmt)
+        console_handler.addFilter(lambda record: record.levelno < logging.WARNING)
+        console_handler.setLevel(loglevel)
+        root_logger.addHandler(console_handler)
+    console_err_handler = logging.StreamHandler(sys.stderr)
+    console_err_handler.setFormatter(console_fmt)
+    console_err_handler.setLevel(logging.WARNING)
+    root_logger.addHandler(console_err_handler)
 
     if args.syslog:
         # setup logging to syslog
