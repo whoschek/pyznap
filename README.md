@@ -150,7 +150,7 @@ Here is a list of all options you can set in the config fie:
 | `send_exclude_property` | String          | Name of filesystem zfs property for ignoring sending snaphot |
 | `dest`                  | List of string  | Comma-separated list of destinations where to send source filesystem |
 | `dest_key`              | List of string  | Path to ssh keyfile for dest. Comma-separated list for multiple dest |
-| `compress`              | List of string  | Compression to use over ssh, supported are gzip, lzop, bzip2, pigz, xz & lz4. Default is lzop. Comma-separated list for multiple dest |    
+| `compress`              | List of string  | Compression to use over ssh, supported are none, gzip, lzop, bzip2, pigz, xz & lz4. Default is lzop. Comma-separated list for multiple dest |
 | `exclude`               | List of string  | Whitespace-separated list of datasets to exclude from sending. Exclude lists for different dests are separated by comma |
 | `raw_send`              | List of yes/no  | Use zfs raw send. Comma-separated list for multiple dest |
 | `resume`                | List of yes/no  | Use resumable send/receive. Comma-separated list for multiple dest |
@@ -278,3 +278,13 @@ Run `pyznap -h` to see all available options.
 + Backup a single filesystem and exclude some datasets:
 
     `pyznap send -s tank -d backup/tank -e '/tank/data*' '/tank/home/user1*' '*/user2/docs'`
+
+#### Environment variaables ####
+
++ PYZNAP_DISABLE_MBUFFER
+
+    Don't add mbuffer command in send/receive pipe.
+
++ PYZNAP_DISABLE_PV
+
+    Don't add pv command in send/receive pipe.
