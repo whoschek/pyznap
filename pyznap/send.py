@@ -48,6 +48,7 @@ def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=F
         ssh_source = snapshot.ssh
         stream_size = snapshot.stream_size(base=base, raw=raw, resume_token=resume_token)
 
+        zfs.STATS.add('zfs_send_snap_count')
         if get_dry_run():
             zfs.STATS.add('send_size', stream_size)
             logger.warning('DRY_RUN: send_snapshot {} --> {} base:{} size:{} resume_token:{}'.format(
@@ -178,6 +179,8 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
     #                     .format(dest_name_log, bytes_fmt(base.stream_size(raw=raw, resume_token=resume_token))))
     #         if abort_resume(dest_fs):
     #             return 1
+
+    zfs.STATS.add('zfs_send_filesystem_count')
 
     if resume_token is not None:
         logger.info('Found resume token. Resuming last transfer of {:s} (~{:s})...'
