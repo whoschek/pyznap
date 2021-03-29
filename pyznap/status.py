@@ -54,13 +54,15 @@ def status_filesystem(filesystem, conf):
     for snaps in snapshots.values():
         snaps.reverse()
 
+    level = logging.INFO
+
+    # prepare data for status
     counts = {}
     for s in snapshots.keys():
         counts[s] = conf.get(s, 0) or 0
-
-    level = logging.INFO
     pyznap_snapshots = sum(len(s) for s in snapshots.values())
 
+    # increate stats count and check excludes in send
     zfs.STATS.add('checked_count')
     if conf.get('snap', False):
         zfs.STATS.add('snap_count')
@@ -80,6 +82,7 @@ def status_filesystem(filesystem, conf):
     if send:
         zfs.STATS.add('send_count')
 
+    # make status data
     status = {
         'name': str(filesystem),
         'snap': conf.get('snap', False),
@@ -94,7 +97,8 @@ def status_filesystem(filesystem, conf):
         'hourly': str(len(snapshots['hourly']))+'/'+str(counts['hourly']),
         'frequent': str(len(snapshots['frequent']))+'/'+str(counts['frequent']),
         }
-    
+
+    # check needed snapshots count
     if (
         len(snapshots['yearly']) < counts['yearly'] or
         len(snapshots['monthly']) < counts['monthly'] or
@@ -104,6 +108,9 @@ def status_filesystem(filesystem, conf):
         len(snapshots['frequent']) < counts['frequent']
     ):
         level = logging.WARNING
+
+    # TODO: last/first snapshot timestamp
+    # TODO: remote uptodate check
 
     logger.log(level, 'STATUS: '+str(status))
 
