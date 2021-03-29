@@ -122,7 +122,7 @@ def _main():
                              help='interval in seconds between retries. default is 10')
 
     subparsers.add_parser('full', help='full cycle: snap --take / send / snap --clean')
-    subparsers.add_parser('status', help='check fielsystem snapshots staus')
+    subparsers.add_parser('status', help='check filesystem snapshots status')
 
     if len(sys.argv)==1:
         parser.print_help(sys.stderr)

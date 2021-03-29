@@ -282,7 +282,7 @@ Run `pyznap -h` to see all available options.
 
     `pyznap send -s tank -d backup/tank -e '/tank/data*' '/tank/home/user1*' '*/user2/docs'`
 
-#### Environment variaables ####
+#### Environment variables ####
 
 + PYZNAP_DISABLE_MBUFFER
 
