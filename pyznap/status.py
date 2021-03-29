@@ -8,11 +8,9 @@
     :license: GPLv3, see LICENSE for more details.
 """
 
-import sys
-from pprint import pprint
-
 import logging
 from datetime import datetime
+from fnmatch import fnmatch
 from subprocess import CalledProcessError
 from .ssh import SSH, SSHException
 from .utils import parse_name
@@ -56,21 +54,37 @@ def status_filesystem(filesystem, conf):
     for snaps in snapshots.values():
         snaps.reverse()
 
-    # pprint(fs_snapshots[0])
-    # pprint(snapshots['yearly'])
-    # pprint(conf.get('yearly', 0))
-    
     counts = {}
     for s in snapshots.keys():
         counts[s] = conf.get(s, 0) or 0
 
     level = logging.INFO
     pyznap_snapshots = sum(len(s) for s in snapshots.values())
+
+    zfs.STATS.add('checked_count')
+    if conf.get('snap', False):
+        zfs.STATS.add('snap_count')
+    if conf.get('clean', False):
+        zfs.STATS.add('clean_count')
+    send = conf.get('dest', False)
+    if send:
+        # check excluded
+        sending = []
+        for exclude, dst in zip(conf['exclude'], send):
+            if exclude and any(fnmatch(filesystem.name, pattern) for pattern in exclude):
+                logger.debug('Exluded from send {} -> {}...'.format(filesystem, dst))
+                sending.append(False)
+            else:
+                sending.append(dst)
+        send = sending
+    if send:
+        zfs.STATS.add('send_count')
+
     status = {
         'name': str(filesystem),
         'snap': conf.get('snap', False),
         'clean': conf.get('clean', False),
-        'dest': conf.get('dest', False),
+        'send': send,
         'snapshots': len(fs_snapshots),
         'pyznap_snapshots': pyznap_snapshots,
         'yearly': str(len(snapshots['yearly']))+'/'+str(counts['yearly']),
