@@ -306,9 +306,23 @@ class ZFSDataset(object):
     def promote(self):
         raise NotImplementedError()
 
-    # TODO: split force to allow -f and -p to be specified individually
-    def rename(self, name, recursive=False, force=False):
-        raise NotImplementedError()
+    def rename(self, name, recursive=False, force=False, create_parents=False):
+        cmd = ['zfs', 'rename']
+
+        if force:
+            cmd.append('-f')
+
+        if create_parents:
+            cmd.append('-p')
+
+        if recursive:
+            cmd.append('-r')
+
+        cmd.append(self.name)
+        cmd.append(name)
+
+        STATS.add('zfs_rename')
+        check_output_dry(cmd, ssh=self.ssh)
 
     def getprops(self):
         return findprops(self.name, ssh=self.ssh, max_depth=0)[self.name]
@@ -380,6 +394,10 @@ class ZFSSnapshot(ZFSDataset):
     def snapname(self):
         snapname = self.name.split('@')[-1]
         return snapname
+
+    def fsname(self):
+        fsname = self.name.split('@')[0]
+        return fsname
 
     def parent(self):
         parent_path = self.name.split('@')[0]

@@ -21,6 +21,7 @@ from .clean import clean_config
 from .take import take_config
 from .send import send_config
 from .status import status_config
+from .fix import fix_snapshots
 from .process import set_dry_run
 import pyznap.pyzfs as zfs
 from . import __version__
@@ -120,6 +121,19 @@ def _main():
     parser_send.add_argument('--retry-interval', action="store", type=int,
                              dest='retry_interval', default=10,
                              help='interval in seconds between retries. default is 10')
+
+    parser_fix = subparsers.add_parser('fix', help='fix zfs snaphot from other format to pyznap')
+    parser_fix.add_argument('-t', '--type', action="store",
+                             dest='type', help='snaphot type name')
+    parser_fix.add_argument('-f', '--format', action="store", required=True,
+                             dest='format', help='snaphot format specification (regexp/@predefined[@zfs-auto-snap,@zfsnap])')
+    parser_fix.add_argument('-m', '--map', action="store",
+                             dest='map', help='optional type mapping (old=new:...)')
+    parser_fix.add_argument('-r', '--recurse', action="store_true",
+                             dest='recurse', help='recurse in child filesystems')
+    # TODO: time shift
+    parser_fix.add_argument('filesystem', nargs='+', help='filesystems to fix')
+
 
     subparsers.add_parser('full', help='full cycle: snap --take / send / snap --clean')
     subparsers.add_parser('status', help='check filesystem snapshots status')
@@ -251,6 +265,12 @@ def _main():
                 logger.error('Missing source...')
             else:
                 send_config(config)
+
+        elif args.command == 'fix':
+            tmap = args.map
+            if tmap:
+                tmap = dict(kw.split('=') for kw in args.map.split(':'))
+            fix_snapshots(args.filesystem, format=args.format, type=args.type, recurse=args.recurse, type_map=tmap)
 
         elif args.command == 'status':
             status_config(config)
