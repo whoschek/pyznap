@@ -20,6 +20,7 @@ from .utils import read_config, create_config
 from .clean import clean_config
 from .take import take_config
 from .send import send_config
+from .status import status_config
 from .process import set_dry_run
 import pyznap.pyzfs as zfs
 from . import __version__
@@ -121,6 +122,7 @@ def _main():
                              help='interval in seconds between retries. default is 10')
 
     subparsers.add_parser('full', help='full cycle: snap --take / send / snap --clean')
+    subparsers.add_parser('status', help='check fielsystem snapshots staus')
 
     if len(sys.argv)==1:
         parser.print_help(sys.stderr)
@@ -186,7 +188,7 @@ def _main():
     try:
         logger.info('Starting pyznap...')
 
-        if args.command in ('snap', 'send', 'full'):
+        if args.command in ('snap', 'send', 'full', 'status'):
             config_path = args.config if args.config else os.path.join(CONFIG_DIR, 'pyznap.conf')
             config = read_config(config_path)
             if config == None:
@@ -249,6 +251,9 @@ def _main():
                 logger.error('Missing source...')
             else:
                 send_config(config)
+
+        elif args.command == 'status':
+            status_config(config)
 
         zfs.STATS.log()
         logger.info('Finished successfully...\n')

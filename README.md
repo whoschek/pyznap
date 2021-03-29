@@ -239,6 +239,9 @@ Run `pyznap -h` to see all available options.
 
   Do full cycle: snap --take / send / snap --clean
 
++ status
+
+  Check snapshots state and print counts with info.
 
 
 #### Usage examples ####
