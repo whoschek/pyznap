@@ -269,7 +269,7 @@ def send_config(config):
                          .format(source_name_log, err.stderr.rstrip()))
             continue
 
-        send_exclude_property = conf['snap_exclude_property']
+        send_exclude_property = conf['send_exclude_property']
 
         # Send to every backup destination
         for backup_dest in conf['dest']:
