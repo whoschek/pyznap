@@ -335,7 +335,10 @@ class ZFSDataset(object):
         return default if value == '-' else value
 
     def ispropval(self, prop, check='true'):
-        value = self.getpropval(prop, default='')
+        try:
+            value = self.getpropval(prop, default='')
+        except sp.CalledProcessError:
+            value = ''
         return value.lower() == check
 
     def setprop(self, prop, value):
