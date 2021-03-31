@@ -121,8 +121,12 @@ def read_config(path):
                                    for i in value.split(',')]
                 elif option in ['retries', 'retry_interval']:
                     dic[option] = [int(i) for i in value.split(',')]
-    # Pass through values recursively
-    for parent in config:
+
+    # Sort by pathname - must be before propagation
+    config = sorted(config, key=lambda entry: entry['name'].split('/'))
+
+    # Pass through values recursively - parent must be reversed for proper propagation
+    for parent in reversed(config):
         for child in config:
             if parent == child:
                 continue
@@ -132,8 +136,6 @@ def read_config(path):
                                'snap', 'clean', 'ignore_not_existing',
                                'snap_exclude_property', 'send_exclude_property']:
                     child[option] = child[option] if child[option] is not None else parent[option]
-    # Sort by pathname
-    config = sorted(config, key=lambda entry: entry['name'].split('/'))
 
     return config
 
