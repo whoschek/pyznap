@@ -108,7 +108,9 @@ def find_exclude(conf, config):
         ssh = None
         name_log = fsname
 
-    out = _find(path=fsname, ssh=ssh, types=['filesystem', 'volume'])
+    max_deph = conf['max_depth'] if isinstance(conf['max_depth'], int) and conf['max_depth'] >= 0 else None
+
+    out = _find(path=fsname, ssh=ssh, types=['filesystem', 'volume'], max_depth=max_deph)
 
     # get subconfigs names with / for conf
     sub_config_names = tuple([ c['name']+'/' for c in config if c['name'].startswith(name+'/')])

@@ -145,6 +145,7 @@ Here is a list of all options you can set in the config fie:
 | `yearly`                | Integer         | Number of yearly snapshots |
 | `snap`                  | yes/no          | Should snapshots be taken |
 | `clean`                 | yes/no          | Should snapshots be cleaned |
+| `max_depth`             | Integer         | Child recursion level (0 - no childs only parent is procesed, no/undefined - infinite) |
 | `ignore_not_existing`   | yes/no          | If filesystem not exist, make warning no error |
 | `snap_exclude_property` | String          | Name of filesystem zfs property for ignoring create/lear snapshots (value="com.sun:auto-snapshot" mimic zfs-auto-snapshot behavior) |
 | `send_exclude_property` | String          | Name of filesystem zfs property for ignoring sending snapshot |
