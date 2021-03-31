@@ -62,7 +62,7 @@ def status_filesystem(filesystem, conf):
         counts[s] = conf.get(s, 0) or 0
     pyznap_snapshots = sum(len(s) for s in snapshots.values())
 
-    # increate stats count and check excludes in send
+    # increase stats count and check excludes in send
     zfs.STATS.add('checked_count')
     if conf.get('snap', False):
         zfs.STATS.add('snap_count')
@@ -74,7 +74,7 @@ def status_filesystem(filesystem, conf):
         sending = []
         for exclude, dst in zip(conf['exclude'], send):
             if exclude and any(fnmatch(filesystem.name, pattern) for pattern in exclude):
-                logger.debug('Exluded from send {} -> {}...'.format(filesystem, dst))
+                logger.debug('Excluded from send {} -> {}...'.format(filesystem, dst))
                 sending.append(False)
             else:
                 sending.append(dst)
@@ -170,7 +170,7 @@ def status_config(config):
                 logger.debug('Ignore dataset {:s}, have property {:s}=false'.format(name_log, snap_exclude_property))
             else:
                 status_filesystem(children[0], conf)
-            # status snapshots of all children that don't have a seperate config entry
+            # status snapshots of all children that don't have a separate config entry
             for child in children[1:]:
                 # Check if any of the parents (but child of base filesystem) have a config entry
                 for parent in children[1:]:

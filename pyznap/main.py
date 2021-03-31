@@ -122,11 +122,11 @@ def _main():
                              dest='retry_interval', default=10,
                              help='interval in seconds between retries. default is 10')
 
-    parser_fix = subparsers.add_parser('fix', help='fix zfs snaphot from other format to pyznap')
+    parser_fix = subparsers.add_parser('fix', help='fix zfs snapshot from other format to pyznap')
     parser_fix.add_argument('-t', '--type', action="store",
-                             dest='type', help='snaphot type name')
+                             dest='type', help='snapshot type name')
     parser_fix.add_argument('-f', '--format', action="store", required=True,
-                             dest='format', help='snaphot format specification (regexp/@predefined[@zfs-auto-snap,@zfsnap])')
+                             dest='format', help='snapshot format specification (regexp/@predefined[@zfs-auto-snap,@zfsnap])')
     parser_fix.add_argument('-m', '--map', action="store",
                              dest='map', help='optional type mapping (old=new:...)')
     parser_fix.add_argument('-r', '--recurse', action="store_true",

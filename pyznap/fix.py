@@ -91,7 +91,7 @@ def fix_snapshots(filesystems, format=None, type=None, type_map=None, recurse=Fa
             continue
 
         if recurse:
-            # get all childs filesystem
+            # get all child's filesystem
             fstree = zfs.find(fsname, types=['filesystem', 'volume'])
         else:
             # only scan specified filesystem
@@ -108,11 +108,11 @@ def fix_snapshots(filesystems, format=None, type=None, type_map=None, recurse=Fa
                 except:
                     r=False
                 if r:
-                    # guess yeaar
+                    # guess year
                     year = re_get_group_int(r, 'year', default=now.year)
                     if year < 100:
                         year += +cur_century
-                    # get type from snap, with optinal map or default type if specified
+                    # get type from snap, with optional map or default type if specified
                     snaptype = r.group('type')
                     if type_map:
                         if snaptype in type_map:

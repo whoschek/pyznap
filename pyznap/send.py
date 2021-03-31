@@ -72,7 +72,7 @@ def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=F
         send.stderr.close()
 
         stdout, stderr = recv.communicate()
-        # raise any error that occured
+        # raise any error that occurred
         if recv.returncode:
             raise CalledProcessError(returncode=recv.returncode, cmd=recv.args, output=stdout, stderr=stderr)
 
@@ -339,11 +339,11 @@ def send_config(config):
                 if any(fnmatch(source_fs.name, pattern) for pattern in exclude):
                     logger.debug('Matched {} in exclude rules, not sending...'.format(source_fs))
                     continue
-                # check exclude atribute
+                # check exclude attribute
                 if send_exclude_property and source_fs.ispropval(send_exclude_property, check='false'):
                     logger.debug('Not sending {}, have property {:s}=false'.format(source_fs, send_exclude_property))
                     continue
-                # TODO: create missing skiped filesystem on destination
+                # TODO: create missing skipped filesystem on destination
                 # send not excluded filesystems
                 for retry in range(1,retries+2):
                     rc = send_filesystem(source_fs, dest_name, ssh_dest=ssh_dest, raw=raw, resume=resume)

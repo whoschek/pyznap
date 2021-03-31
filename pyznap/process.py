@@ -117,7 +117,7 @@ def check_output(*popenargs, timeout=None, ssh=None, **kwargs):
     Returns
     -------
     None or list of lists
-        List of all lines from the output, seperated at '\t' into lists
+        List of all lines from the output, separated at '\t' into lists
     """
 
     if 'stdout' in kwargs:

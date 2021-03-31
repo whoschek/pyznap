@@ -146,8 +146,8 @@ Here is a list of all options you can set in the config fie:
 | `snap`                  | yes/no          | Should snapshots be taken |
 | `clean`                 | yes/no          | Should snapshots be cleaned |
 | `ignore_not_existing`   | yes/no          | If filesystem not exist, make warning no error |
-| `snap_exclude_property` | String          | Name of filesystem zfs property for ignoring create/lear snaphots (value="com.sun:auto-snapshot" mimic zfs-auto-snapshot behavior) |
-| `send_exclude_property` | String          | Name of filesystem zfs property for ignoring sending snaphot |
+| `snap_exclude_property` | String          | Name of filesystem zfs property for ignoring create/lear snapshots (value="com.sun:auto-snapshot" mimic zfs-auto-snapshot behavior) |
+| `send_exclude_property` | String          | Name of filesystem zfs property for ignoring sending snapshot |
 | `dest`                  | List of string  | Comma-separated list of destinations where to send source filesystem |
 | `dest_key`              | List of string  | Path to ssh keyfile for dest. Comma-separated list for multiple dest |
 | `compress`              | List of string  | Compression to use over ssh, supported are none, gzip, lzop, bzip2, pigz, xz & lz4. Default is lzop. Comma-separated list for multiple dest |
@@ -177,7 +177,7 @@ Run `pyznap -h` to see all available options.
 
 + -t, --trace
 
-  Print runned commands, override verbose and quiet
+  Print the commands it runs, override verbose and quiet
 
 + --syslog
 
@@ -189,7 +189,7 @@ Run `pyznap -h` to see all available options.
 
 + -V, --version
 
-  Print yhis pyznap version
+  Print this pyznap version
 
 + setup [-p PATH]
 
