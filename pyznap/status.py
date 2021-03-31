@@ -69,7 +69,7 @@ def status_filesystem(filesystem, conf):
     if conf.get('clean', False):
         zfs.STATS.add('clean_count')
     send = conf.get('dest', False)
-    if send:
+    if send and conf['exclude']:
         # check excluded
         sending = []
         for exclude, dst in zip(conf['exclude'], send):
@@ -151,7 +151,7 @@ def status_config(config):
 
         try:
             # Children includes the base filesystem (named 'fsname')
-            children = zfs.find(path=fsname, types=['filesystem', 'volume'], ssh=ssh)
+            children = zfs.find_exclude(conf, config)
         except DatasetNotFoundError as err:
             if conf['ignore_not_existing']:
                 logger.warning('Dataset {:s} does not exist...'.format(name_log))
@@ -165,31 +165,14 @@ def status_config(config):
             logger.error('Error while opening {:s}: \'{:s}\'...'
                          .format(name_log, err.stderr.rstrip()))
         else:
-            # status snapshots of parent filesystem
-            if snap_exclude_property and children[0].ispropval(snap_exclude_property, check='false'):
-                logger.debug('Ignore dataset {:s}, have property {:s}=false'.format(name_log, snap_exclude_property))
-            else:
-                status_filesystem(children[0], conf)
+            # status snapshots of parent filesystem - ignore exclude property for top fs
+            status_filesystem(children[0], conf)
             # status snapshots of all children that don't have a separate config entry
             for child in children[1:]:
-                # Check if any of the parents (but child of base filesystem) have a config entry
-                for parent in children[1:]:
-                    if ssh:
-                        child_name = 'ssh:{:d}:{:s}@{:s}:{:s}'.format(port, user, host, child.name)
-                        parent_name = 'ssh:{:d}:{:s}@{:s}:{:s}'.format(port, user, host, parent.name)
-                    else:
-                        child_name = child.name
-                        parent_name = parent.name
-                    # Skip if child has an entry or if any parent entry already in config
-                    child_parent = '/'.join(child_name.split('/')[:-1]) # get parent of child filesystem
-                    if ((child_name == parent_name or child_parent.startswith(parent_name)) and
-                        (parent_name in [entry['name'] for entry in config])):
-                        break
+                if snap_exclude_property and child.ispropval(snap_exclude_property, check='false'):
+                    logger.debug('Ignore dataset {:s}, have property {:s}=false'.format(child.name, snap_exclude_property))
                 else:
-                    if snap_exclude_property and child.ispropval(snap_exclude_property, check='false'):
-                        logger.debug('Ignore dataset {:s}, have property {:s}=false'.format(child_name, snap_exclude_property))
-                    else:
-                        status_filesystem(child, conf)
+                    status_filesystem(child, conf)
         finally:
             if ssh:
                 ssh.close()

@@ -8,9 +8,6 @@
     :license: GPLv3, see LICENSE for more details.
 """
 
-import sys
-from pprint import pprint
-
 import logging
 import re
 from datetime import datetime

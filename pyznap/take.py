@@ -152,7 +152,7 @@ def take_config(config):
 
         try:
             # Children includes the base filesystem (named 'fsname')
-            children = zfs.find(path=fsname, types=['filesystem', 'volume'], ssh=ssh)
+            children = zfs.find_exclude(conf, config)
         except DatasetNotFoundError as err:
             if conf['ignore_not_existing']:
                 logger.warning('Dataset {:s} does not exist...'.format(name_log))
@@ -167,28 +167,14 @@ def take_config(config):
                          .format(name_log, err.stderr.rstrip()))
             continue
         else:
-            # Take recursive snapshot of parent filesystem
-            if snap_exclude_property and children[0].ispropval(snap_exclude_property, check='false'):
-                logger.debug('Ignore dataset {:s}, have property {:s}=false'.format(name_log, snap_exclude_property))
-            else:
-                take_filesystem(children[0], conf)
-            # Get subchild configurations names
-            sub_name_prefix = children[0].name+'/'
-            sub_config_names = list(map(lambda c: c['name'], filter(lambda c: c['name'].startswith(sub_name_prefix), config)))
+            # Take recursive snapshot of parent filesystem - ignore exclude property for top fs
+            take_filesystem(children[0], conf)
             # Take snapshot of all children that don't have all snapshots yet
             for child in children[1:]:
-                # exclude filesystems with own configuration
-                if ssh:
-                    child_name = 'ssh:{:d}:{:s}@{:s}:{:s}'.format(port, user, host, child.name)
+                if snap_exclude_property and child.ispropval(snap_exclude_property, check='false'):
+                    logger.debug('Ignore dataset {:s}, have property {:s}=false'.format(child.name, snap_exclude_property))
                 else:
-                    child_name = child.name
-                if any(filter(lambda n: child_name == n or child_name.startswith(n+'/'), sub_config_names)):
-                    logger.log(8, 'Ignoring child {:s}, have own configuration.'.format(child_name))
-                else:
-                    if snap_exclude_property and child.ispropval(snap_exclude_property, check='false'):
-                        logger.debug('Ignore dataset {:s}, have property {:s}=false'.format(child_name, snap_exclude_property))
-                    else:
-                        take_filesystem(child, conf)
+                    take_filesystem(child, conf)
         finally:
             if ssh:
                 ssh.close()

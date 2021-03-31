@@ -8,13 +8,13 @@
     :license: GPLv3, see LICENSE for more details.
 """
 
-
 import sys
 import logging
 import subprocess as sp
 from shlex import quote
 from .process import check_output, check_output_dry, set_dry_run, DatasetNotFoundError, DatasetBusyError
-from .utils import exists, bytes_fmt
+from .utils import exists, bytes_fmt, parse_name
+from .ssh import SSH, SSHException
 
 
 SHELL = ['sh', '-c']
@@ -51,8 +51,8 @@ class STATS:
 
 
 
-def find(path=None, ssh=None, max_depth=None, types=[]):
-    """Lists filesystems and snapshots for a given path"""
+def _find(path=None, ssh=None, max_depth=None, types=[]):
+    """Get filesystems and snapshots names for a given path"""
     cmd = ['zfs', 'list']
 
     cmd.append('-H')
@@ -75,9 +75,55 @@ def find(path=None, ssh=None, max_depth=None, types=[]):
     if path:
         cmd.append(path)
 
-    out = check_output(cmd, ssh=ssh)
+    return check_output(cmd, ssh=ssh)
+
+
+def find(path=None, ssh=None, max_depth=None, types=[]):
+    """Lists filesystems and snapshots for a given path"""
+
+    out = _find(path=path, ssh=ssh, max_depth=max_depth, types=types)
 
     return [open(name, ssh=ssh, type=type) for name, type in out]
+
+
+def find_exclude(conf, config):
+    """Lists child filesystems and volumes for a given path
+    exclude filesystems with own config"""
+
+    name = conf['name']
+    try:
+        _type, fsname, user, host, port = parse_name(name)
+    except ValueError as err:
+        logger.error('Could not parse {:s}: {}...'.format(name, err))
+        raise
+
+    if _type == 'ssh':
+        try:
+            ssh = SSH(user, host, port=port, key=conf['key'])
+        except (FileNotFoundError, SSHException) as err:
+            logger.error('SSH error {:s}: {}...'.format(name, err))
+            raise
+        name_log = '{:s}@{:s}:{:s}'.format(user, host, fsname)
+    else:
+        ssh = None
+        name_log = fsname
+
+    out = _find(path=fsname, ssh=ssh, types=['filesystem', 'volume'])
+
+    # get subconfigs names with / for conf
+    sub_config_names = tuple([ c['name']+'/' for c in config if c['name'].startswith(name+'/')])
+
+    if ssh:
+        prefix = ':'.join(name.split(':')[:-1])
+    else:
+        prefix = ''
+
+    # exclude filesystem with own configuration
+    return [
+        open(name, ssh=ssh, type=type) 
+            for name, type in out
+                if not (prefix+name+'/').startswith(sub_config_names)
+        ]
 
 
 def findprops(path=None, ssh=None, max_depth=None, props=['all'], sources=[], types=[]):
