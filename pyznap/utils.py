@@ -127,17 +127,25 @@ def read_config(path):
     # Sort by pathname - must be before propagation
     config = sorted(config, key=lambda entry: entry['name'].split('/'))
 
-    # Pass through values recursively - parent must be reversed for proper propagation
-    for parent in reversed(config):
+    # Find closest parent
+    for child in config:
+        child['_parent'] = None
+        for parent in reversed(config):
+            if (child['name'].startswith(parent['name']+'/')
+                    or (parent['name']=='' and parent['name'] != child['name'])):
+                child['_parent'] = parent['name']
+                break
+
+    # Pass through values recursively
+    for parent in config:
         for child in config:
-            if parent == child:
-                continue
-            child_parent = '/'.join(child['name'].split('/')[:-1])  # get parent of child filesystem
-            if child_parent.startswith(parent['name']):
-                for option in ['key', 'frequent', 'hourly', 'daily', 'weekly', 'monthly', 'yearly',
-                               'snap', 'clean', 'ignore_not_existing', 'send_last_snapshot', 'max_depth',
-                               'snap_exclude_property', 'send_exclude_property']:
-                    child[option] = child[option] if child[option] is not None else parent[option]
+            if parent['name'] == child['_parent']:
+                child_parent = '/'.join(child['name'].split('/')[:-1])  # get parent of child filesystem
+                if child_parent.startswith(parent['name']):
+                    for option in ['key', 'frequent', 'hourly', 'daily', 'weekly', 'monthly', 'yearly',
+                                'snap', 'clean', 'ignore_not_existing', 'send_last_snapshot', 'max_depth',
+                                'snap_exclude_property', 'send_exclude_property']:
+                        child[option] = child[option] if child[option] is not None else parent[option]
 
     return config
 
