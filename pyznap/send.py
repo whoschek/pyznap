@@ -90,7 +90,7 @@ def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=F
         return 0
 
 
-def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False):
+def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False, send_last_snapshot=False):
     """Checks for common snapshots between source and dest.
     If none are found, send the oldest snapshot, then update with the most recent one.
     If there are common snaps, update destination with the most recent one.
@@ -198,8 +198,13 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
                          .format(dest_name_log))
             return 1
         else:
-            logger.info('No common snapshots on {:s}, sending oldest snapshot {} (~{:s})...'
-                        .format(dest_name_log, base, bytes_fmt(base.stream_size(raw=raw))))
+            if send_last_snapshot:
+                logger.info('No common snapshots on {:s}, sending last snapshot {} (~{:s})...'
+                            .format(dest_name_log, base, bytes_fmt(base.stream_size(raw=raw))))
+                base = snapshot
+            else:
+                logger.info('No common snapshots on {:s}, sending oldest snapshot {} (~{:s})...'
+                            .format(dest_name_log, base, bytes_fmt(base.stream_size(raw=raw))))
             rc = send_snap(base, dest_name, base=None, ssh_dest=ssh_dest, raw=raw, resume=resume)
             if rc:
                 return rc
@@ -282,6 +287,8 @@ def send_config(config):
             retry_interval = conf['retry_interval'].pop(0) if conf.get('retry_interval', None) else 10
             # check if resumable send was requested
             resume = conf['resume'].pop(0) if conf.get('resume', None) else False
+            # check if send_last_snapshot was requested
+            send_last_snapshot = conf['send_last_snapshot'].pop(0) if conf.get('send_last_snapshot', None) else False
             # check if we should create dataset if it doesn't exist
             dest_auto_create = conf['dest_auto_create'].pop(0) if conf.get('dest_auto_create', None) else False
 
@@ -346,7 +353,7 @@ def send_config(config):
                 # TODO: create missing skipped filesystem on destination
                 # send not excluded filesystems
                 for retry in range(1,retries+2):
-                    rc = send_filesystem(source_fs, dest_name, ssh_dest=ssh_dest, raw=raw, resume=resume)
+                    rc = send_filesystem(source_fs, dest_name, ssh_dest=ssh_dest, raw=raw, resume=resume, send_last_snapshot=send_last_snapshot)
                     if rc == 2 and retry <= retries:
                         logger.info('Retrying send in {:d}s (retry {:d} of {:d})...'.format(retry_interval, retry, retries))
                         sleep(retry_interval)

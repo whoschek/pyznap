@@ -112,6 +112,8 @@ def _main():
                              dest='raw', help='raw zfs send. default is false')
     parser_send.add_argument('-r', '--resume', action="store_true",
                              dest='resume', help='resumable send. default is false')
+    parser_send.add_argument('-l', '--last', action="store_true",
+                             dest='send_last_snapshot', help='stat sending from last snapshot')
     parser_send.add_argument('--dest-auto-create', action="store_true",
                              dest='dest_auto_create',
                              help='create destination if it does not exist. default is false')
@@ -253,11 +255,14 @@ def _main():
                 retry_interval = [args.retry_interval] if args.retry_interval else None
                 # automatically create dest dataset if it does not exist
                 dest_auto_create = [args.dest_auto_create] if args.dest_auto_create else None
+                # start send from last snapshot
+                send_last_snapshot = [args.send_last_snapshot] if args.send_last_snapshot else None
 
                 send_config([{'name': args.source, 'dest': [args.dest], 'key': source_key,
                               'dest_keys': dest_key, 'compress': compress, 'exclude': exclude,
                               'raw_send': raw, 'resume': resume, 'dest_auto_create': dest_auto_create,
-                              'retries': retries, 'retry_interval': retry_interval}])
+                              'retries': retries, 'retry_interval': retry_interval,
+                              'send_last_snapshot': send_last_snapshot}])
 
             elif args.source and not args.dest:
                 logger.error('Missing dest...')

@@ -86,7 +86,7 @@ def read_config(path):
     config = []
     options = ['key', 'frequent', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'snap', 'clean',
                'dest', 'dest_keys', 'compress', 'exclude', 'raw_send', 'resume', 'dest_auto_create',
-               'retries', 'retry_interval', 'ignore_not_existing', 
+               'retries', 'retry_interval', 'ignore_not_existing', 'send_last_snapshot',
                'snap_exclude_property', 'send_exclude_property']
 
     for section in parser.sections():
@@ -116,7 +116,7 @@ def read_config(path):
                 elif option in ['exclude']:
                     dic[option] = [[i.strip() for i in s.strip().split(' ')] if s.strip() else None
                                     for s in value.split(',')]
-                elif option in ['raw_send', 'resume', 'dest_auto_create']:
+                elif option in ['raw_send', 'resume', 'dest_auto_create', 'send_last_snapshot']:
                     dic[option] = [{'yes': True, 'no': False}.get(i.strip().lower(), None)
                                    for i in value.split(',')]
                 elif option in ['retries', 'retry_interval']:
@@ -133,7 +133,7 @@ def read_config(path):
             child_parent = '/'.join(child['name'].split('/')[:-1])  # get parent of child filesystem
             if child_parent.startswith(parent['name']):
                 for option in ['key', 'frequent', 'hourly', 'daily', 'weekly', 'monthly', 'yearly',
-                               'snap', 'clean', 'ignore_not_existing',
+                               'snap', 'clean', 'ignore_not_existing', 'send_last_snapshot',
                                'snap_exclude_property', 'send_exclude_property']:
                     child[option] = child[option] if child[option] is not None else parent[option]
 
