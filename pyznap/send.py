@@ -221,8 +221,8 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
         base = next(filter(lambda x: x.name.split('@')[1] in common, snapshots), None)
 
     if base.name != snapshot.name:
-        logger.info('Updating {:s} with recent snapshot {} (~{:s})...'
-                    .format(dest_name_log, snapshot, bytes_fmt(snapshot.stream_size(base, raw=raw))))
+        logger.info('Updating {:s} with recent snapshot {} from {} (~{:s})...'
+                    .format(dest_name_log, snapshot, base.name.split('@')[1], bytes_fmt(snapshot.stream_size(base, raw=raw))))
         rc = send_snap(snapshot, dest_name, base=base, ssh_dest=ssh_dest, raw=raw, resume=resume)
         if rc:
             return rc
