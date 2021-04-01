@@ -179,9 +179,12 @@ def _main():
         loglevel = logging.WARNING
     if args.verbose:
         loglevel = logging.DEBUG
-    if args.raw:
-        # for raw status only error show
-        loglevel = logging.ERROR
+    try:
+        if args.raw :
+            # for raw status only error show
+            loglevel = logging.ERROR
+    except AttributeError:
+        pass
     if args.trace:
         # trace override all
         logging.addLevelName(8, 'TRACE')
