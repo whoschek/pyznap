@@ -90,7 +90,7 @@ def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=F
         return 0
 
 
-def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False, send_last_snapshot=False):
+def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False, send_last_snapshot=False, dest_auto_create=False):
     """Checks for common snapshots between source and dest.
     If none are found, send the oldest snapshot, then update with the most recent one.
     If there are common snaps, update destination with the most recent one.
@@ -148,6 +148,14 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
     try:
         dest_fs = zfs.open(dest_name, ssh=ssh_dest)
     except DatasetNotFoundError:
+        if dest_auto_create:
+            logger.info('Destination {:s} does not exist, will create it...'.format(dest_name_log))
+            if create_dataset(dest_name, dest_name_log, ssh=ssh_dest):
+                return 1
+        else:
+            logger.error('Destination {:s} does not exist, manually create it or use "dest-auto-create" option...'
+                            .format(dest_name_log))
+            return 1
         dest_snapnames = []
         common = set()
     except CalledProcessError as err:
@@ -353,7 +361,8 @@ def send_config(config):
                 # TODO: create missing skipped filesystem on destination
                 # send not excluded filesystems
                 for retry in range(1,retries+2):
-                    rc = send_filesystem(source_fs, dest_name, ssh_dest=ssh_dest, raw=raw, resume=resume, send_last_snapshot=send_last_snapshot)
+                    rc = send_filesystem(source_fs, dest_name, ssh_dest=ssh_dest, raw=raw, resume=resume, 
+                        send_last_snapshot=send_last_snapshot, dest_auto_create=dest_auto_create)
                     if rc == 2 and retry <= retries:
                         logger.info('Retrying send in {:d}s (retry {:d} of {:d})...'.format(retry_interval, retry, retries))
                         sleep(retry_interval)
