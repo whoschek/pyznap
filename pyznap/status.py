@@ -151,7 +151,7 @@ def status_filesystem(filesystem, conf, raw=False, main_fs=False, values=None, f
     # TODO: remote uptodate check
 
     if values:
-        status = {k: v for k, v in status.items() if k in values}
+        status = {k: status[k] for k in values}
 
     if raw:
         print(json.dumps(status))
