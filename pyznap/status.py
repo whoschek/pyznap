@@ -79,13 +79,13 @@ def status_filesystem(filesystem, conf):
         logger.error('Error while opening {}: {}...'.format(filesystem, err))
         return 1
     # categorize snapshots
-    for snap in fs_snapshots:
+    for snaps in fs_snapshots:
         # Ignore snapshots not taken with pyznap
-        if not snap.name.split('@')[1].startswith('pyznap'):
+        if not snaps.name.split('@')[1].startswith('pyznap'):
             continue
         try:
-            snap_type = snap.name.split('_')[-1]
-            snapshots[snap_type].append(snap)
+            snap_type = snaps.name.split('_')[-1]
+            snapshots[snap_type].append(snaps)
         except (ValueError, KeyError):
             continue
 
