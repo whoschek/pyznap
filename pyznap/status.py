@@ -8,6 +8,7 @@
     :license: GPLv3, see LICENSE for more details.
 """
 
+import json
 import logging
 from datetime import datetime
 from fnmatch import fnmatch
@@ -18,7 +19,7 @@ import pyznap.pyzfs as zfs
 from .process import DatasetBusyError, DatasetNotFoundError
 
 
-def status_filesystem(filesystem, conf, filter_snap=None, filter_clean=None, filter_send=None):
+def status_filesystem(filesystem, conf, raw=False, main_fs=False, values=None, filter_snap=None, filter_clean=None, filter_send=None):
     """Deletes snapshots of a single filesystem according to conf.
 
     Parameters:
@@ -27,6 +28,8 @@ def status_filesystem(filesystem, conf, filter_snap=None, filter_clean=None, fil
         Filesystem to status
     conf : {dict}
         Config entry with snapshot strategy
+    main_fs:
+        mark configured filesystem, ignore exclude zfs property
     """
 
     logger = logging.getLogger(__name__)
@@ -37,13 +40,13 @@ def status_filesystem(filesystem, conf, filter_snap=None, filter_clean=None, fil
     clean = conf.get('clean', False)
     send = bool(conf.get('dest', False))
     snap_exclude_property = conf['snap_exclude_property']
-    if snap_exclude_property and filesystem.ispropval(snap_exclude_property, check='false'):
+    if not main_fs and snap_exclude_property and filesystem.ispropval(snap_exclude_property, check='false'):
         zfs.STATS.add('snap_excluded_count')
         logger.debug('Ignore dataset fron snap {:s}, have property {:s}=false'.format(filesystem.name, snap_exclude_property))
         snap = False
         clean = False
     send_exclude_property = conf['send_exclude_property']
-    if send_exclude_property and filesystem.ispropval(send_exclude_property, check='false'):
+    if not main_fs and send_exclude_property and filesystem.ispropval(send_exclude_property, check='false'):
         zfs.STATS.add('send_excluded_count')
         logger.debug('Ignore dataset fron send {:s}, have property {:s}=false'.format(filesystem.name, snap_exclude_property))
         send = False
@@ -147,10 +150,16 @@ def status_filesystem(filesystem, conf, filter_snap=None, filter_clean=None, fil
     # TODO: last/first snapshot timestamp
     # TODO: remote uptodate check
 
-    logger.log(level, 'STATUS: '+str(status))
+    if values:
+        status = {k: v for k, v in status.items() if k in values}
+
+    if raw:
+        print(json.dumps(status))
+    else:
+        logger.log(level, 'STATUS: '+str(status))
 
 
-def status_config(config, filter_snap=None, filter_clean=None, filter_send=None):
+def status_config(config, raw=False, values=None, filter_snap=None, filter_clean=None, filter_send=None):
     """Check snapshots status according to strategies given in config. Goes through each config,
     opens up ssh connection if necessary and then recursively calls status_filesystem.
 
@@ -200,10 +209,12 @@ def status_config(config, filter_snap=None, filter_clean=None, filter_send=None)
                          .format(name_log, err.stderr.rstrip()))
         else:
             # status snapshots of parent filesystem - ignore exclude property for top fs
-            status_filesystem(children[0], conf, filter_snap=filter_snap, filter_clean=filter_clean, filter_send=filter_send)
+            status_filesystem(children[0], conf, main_fs=True, raw=raw, values=values,
+                filter_snap=filter_snap, filter_clean=filter_clean, filter_send=filter_send)
             # status snapshots of all children that don't have a separate config entry
             for child in children[1:]:
-                status_filesystem(child, conf, filter_snap=filter_snap, filter_clean=filter_clean, filter_send=filter_send)
+                status_filesystem(child, conf, raw=raw, values=values,
+                    filter_snap=filter_snap, filter_clean=filter_clean, filter_send=filter_send)
         finally:
             if ssh:
                 ssh.close()
