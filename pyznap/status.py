@@ -32,6 +32,45 @@ def status_filesystem(filesystem, conf):
     logger = logging.getLogger(__name__)
     logger.debug('Checking snapshots on {}...'.format(filesystem))
 
+    snap = conf.get('snap', False)
+    clean = conf.get('clean', False)
+    send = bool(conf.get('dest', False))
+    snap_exclude_property = conf['snap_exclude_property']
+    if snap_exclude_property and filesystem.ispropval(snap_exclude_property, check='false'):
+        logger.debug('Ignore dataset fron snap {:s}, have property {:s}=false'.format(filesystem.name, snap_exclude_property))
+        snap = False
+        clean = False
+    send_exclude_property = conf['send_exclude_property']
+    if send_exclude_property and filesystem.ispropval(send_exclude_property, check='false'):
+        send = False
+        logger.debug('Ignore dataset fron send {:s}, have property {:s}=false'.format(filesystem.name, snap_exclude_property))
+    if not (snap or clean or send):
+        return
+
+    # increase stats count and check excludes in send
+    zfs.STATS.add('checked_count')
+    if snap:
+        zfs.STATS.add('snap_count')
+    if clean:
+        zfs.STATS.add('clean_count')
+    if send:
+        dest = conf.get('dest', False)
+        if dest and conf['exclude']:
+            # check excluded
+            sending = []
+            for exclude, dst in zip(conf['exclude'], dest):
+                if exclude and any(fnmatch(filesystem.name, pattern) for pattern in exclude):
+                    logger.debug('Excluded from send {} -> {}...'.format(filesystem, dst))
+                    sending.append(False)
+                else:
+                    sending.append(dst)
+            dest = sending
+        send = send and dest and any(filter(lambda x: bool(x), dest))
+        if send:
+            zfs.STATS.add('send_count')
+    else:
+        dest = None
+
     snapshots = {'frequent': [], 'hourly': [], 'daily': [], 'weekly': [], 'monthly': [], 'yearly': []}
     # catch exception if dataset was destroyed since pyznap was started
     try:
@@ -41,8 +80,8 @@ def status_filesystem(filesystem, conf):
         return 1
     # categorize snapshots
     for snap in fs_snapshots:
-        # Ignore snapshots not taken with pyznap or sanoid
-        if not snap.name.split('@')[1].startswith(('pyznap', 'autosnap')):
+        # Ignore snapshots not taken with pyznap
+        if not snap.name.split('@')[1].startswith('pyznap'):
             continue
         try:
             snap_type = snap.name.split('_')[-1]
@@ -62,32 +101,13 @@ def status_filesystem(filesystem, conf):
         counts[s] = conf.get(s, 0) or 0
     pyznap_snapshots = sum(len(s) for s in snapshots.values())
 
-    # increase stats count and check excludes in send
-    zfs.STATS.add('checked_count')
-    if conf.get('snap', False):
-        zfs.STATS.add('snap_count')
-    if conf.get('clean', False):
-        zfs.STATS.add('clean_count')
-    send = conf.get('dest', False)
-    if send and conf['exclude']:
-        # check excluded
-        sending = []
-        for exclude, dst in zip(conf['exclude'], send):
-            if exclude and any(fnmatch(filesystem.name, pattern) for pattern in exclude):
-                logger.debug('Excluded from send {} -> {}...'.format(filesystem, dst))
-                sending.append(False)
-            else:
-                sending.append(dst)
-        send = sending
-    if send:
-        zfs.STATS.add('send_count')
-
     # make status data
     status = {
         'name': str(filesystem),
-        'snap': conf.get('snap', False),
-        'clean': conf.get('clean', False),
+        'snap': snap,
+        'clean': clean,
         'send': send,
+        'dest': dest,
         'snapshots': len(fs_snapshots),
         'pyznap_snapshots': pyznap_snapshots,
         'yearly': str(len(snapshots['yearly']))+'/'+str(counts['yearly']),
@@ -96,6 +116,8 @@ def status_filesystem(filesystem, conf):
         'daily': str(len(snapshots['daily']))+'/'+str(counts['daily']),
         'hourly': str(len(snapshots['hourly']))+'/'+str(counts['hourly']),
         'frequent': str(len(snapshots['frequent']))+'/'+str(counts['frequent']),
+        'snap_exclude_property': snap_exclude_property,
+        'send_exclude_property': send_exclude_property,
         }
 
     # check needed snapshots count
@@ -147,8 +169,6 @@ def status_config(config):
             ssh = None
             name_log = fsname
 
-        snap_exclude_property = conf['snap_exclude_property']
-
         try:
             # Children includes the base filesystem (named 'fsname')
             children = zfs.find_exclude(conf, config)
@@ -169,10 +189,7 @@ def status_config(config):
             status_filesystem(children[0], conf)
             # status snapshots of all children that don't have a separate config entry
             for child in children[1:]:
-                if snap_exclude_property and child.ispropval(snap_exclude_property, check='false'):
-                    logger.debug('Ignore dataset {:s}, have property {:s}=false'.format(child.name, snap_exclude_property))
-                else:
-                    status_filesystem(child, conf)
+                status_filesystem(child, conf)
         finally:
             if ssh:
                 ssh.close()
