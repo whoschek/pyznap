@@ -24,19 +24,29 @@ FORMATS={
 
 MAPS={
     '@zfsnap': {
+        '3d': 'frequent',
         '4d': 'frequent',
+        '5d': 'hourly',
+        '7d': 'hourly',
         '10d': 'hourly',
         '14d': 'hourly',
-        '2w': 'hourly',
+        '2w': 'daily',
         '3w': 'daily',
         '5w': 'daily',
         '8w': 'daily',
         '2m': 'daily',
+        '3m': 'weekly',
         '90d': 'weekly',
+        '6m': 'weekly',
         '7m': 'weekly',
+        '8m': 'weekly',
+        '9m': 'weekly',
+        '1y': 'monthly',
         '12m': 'monthly',
         '18m': 'monthly',
         '24m': 'monthly',
+        '2y': 'yearly',
+        '3y': 'yearly',
         '4y': 'yearly',
     }
 }
