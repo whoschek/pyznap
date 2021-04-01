@@ -138,7 +138,9 @@ def _main():
 
 
     subparsers.add_parser('full', help='full cycle: snap --take / send / snap --clean')
-    subparsers.add_parser('status', help='check filesystem snapshots status')
+    parser_status = subparsers.add_parser('status', help='check filesystem snapshots status')
+    parser_status.add_argument('--print-config', action="store_true",
+                             dest='print_config', help='only print parsed and processed config')
 
     if len(sys.argv)==1:
         parser.print_help(sys.stderr)
@@ -278,7 +280,10 @@ def _main():
             fix_snapshots(args.filesystem, format=args.format, type=args.type, recurse=args.recurse, type_map=tmap)
 
         elif args.command == 'status':
-            status_config(config)
+            if args.print_config:
+                print(str(config))
+            else:
+                status_config(config)
 
         zfs.STATS.log()
         logger.info('Finished successfully...\n')
