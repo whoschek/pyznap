@@ -151,6 +151,7 @@ def status_config(config):
     logger.info('Checking snapshots...')
 
     for conf in config:
+        logger.debug('Process config {}...'.format(conf['name']))
 
         name = conf['name']
         try:

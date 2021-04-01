@@ -129,7 +129,9 @@ def take_config(config):
 
     for conf in config:
         if not conf.get('snap', None):
+            logger.debug('Ignore config from snap {}...'.format(conf['name']))
             continue
+        logger.debug('Process config {}...'.format(conf['name']))
 
         name = conf['name']
         try:

@@ -112,7 +112,9 @@ def clean_config(config):
 
     for conf in config:
         if not conf.get('clean', None):
+            logger.debug('Ignore config from clean {}...'.format(conf['name']))
             continue
+        logger.debug('Process config {}...'.format(conf['name']))
 
         name = conf['name']
         try:

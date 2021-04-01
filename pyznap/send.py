@@ -246,7 +246,9 @@ def send_config(config):
 
     for conf in config:
         if not conf.get('dest', None):
+            logger.debug('Ignore config from send {}...'.format(conf['name']))
             continue
+        logger.debug('Process config {}...'.format(conf['name']))
 
         backup_source = conf['name']
         try:
