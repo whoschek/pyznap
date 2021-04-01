@@ -113,7 +113,7 @@ def find_exclude(conf, config):
     out = _find(path=fsname, ssh=ssh, types=['filesystem', 'volume'], max_depth=max_deph)
 
     # get subconfigs names with / for conf
-    sub_config_names = tuple([ c['name']+'/' for c in config if c['name'].startswith(name+'/')])
+    sub_config_names = tuple([ c['name']+'/' for c in config if c['_parent']==name])
 
     if ssh:
         prefix = ':'.join(name.split(':')[:-1])
