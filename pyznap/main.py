@@ -136,11 +136,23 @@ def _main():
     # TODO: time shift
     parser_fix.add_argument('filesystem', nargs='+', help='filesystems to fix')
 
-
     subparsers.add_parser('full', help='full cycle: snap --take / send / snap --clean')
+
     parser_status = subparsers.add_parser('status', help='check filesystem snapshots status')
     parser_status.add_argument('--print-config', action="store_true",
                              dest='print_config', help='only print parsed and processed config')
+    parser_status.add_argument('--filter-snap', action="store_const", const=True,
+                             dest='filter_snap', help='show only filesystems to snap')
+    parser_status.add_argument('--filter-no-snap', action="store_const", const=False,
+                             dest='filter_snap', help='show only filesystems not to snap')
+    parser_status.add_argument('--filter-clean', action="store_const", const=True,
+                             dest='filter_clean', help='show only filesystems to clean')
+    parser_status.add_argument('--filter-no-clean', action="store_const", const=False,
+                             dest='filter_clean', help='show only filesystems not to clean')
+    parser_status.add_argument('--filter-send', action="store_const", const=True,
+                             dest='filter_send', help='show only filesystems to send')
+    parser_status.add_argument('--filter-no-send', action="store_const", const=False,
+                             dest='filter_send', help='show only filesystems not to send')
 
     if len(sys.argv)==1:
         parser.print_help(sys.stderr)
@@ -283,7 +295,7 @@ def _main():
             if args.print_config:
                 print(str(config))
             else:
-                status_config(config)
+                status_config(config, filter_snap=args.filter_snap, filter_clean=args.filter_clean, filter_send=args.filter_send)
 
         zfs.STATS.log()
         logger.info('Finished successfully...\n')
