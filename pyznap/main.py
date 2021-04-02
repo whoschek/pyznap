@@ -140,7 +140,7 @@ def _main():
 
     parser_status = subparsers.add_parser('status', help='check filesystem snapshots status')
     parser_status.add_argument('--raw', action="store_true",
-                             dest='raw', help='quiet and raw print status')
+                             dest='status_raw', help='quiet and raw print status')
     parser_status.add_argument('--print-config', action="store_true",
                              dest='print_config', help='only print parsed and processed config')
     parser_status.add_argument('--values', action="store",
@@ -179,12 +179,9 @@ def _main():
         loglevel = logging.WARNING
     if args.verbose:
         loglevel = logging.DEBUG
-    try:
-        if args.raw :
-            # for raw status only error show
-            loglevel = logging.ERROR
-    except AttributeError:
-        pass
+    if args.command == 'status' and args.status_raw :
+        # for raw status only error show
+        loglevel = logging.ERROR
     if args.trace:
         # trace override all
         logging.addLevelName(8, 'TRACE')
@@ -306,7 +303,7 @@ def _main():
             if args.print_config:
                 print(str(config))
             else:
-                status_config(config, raw=args.raw,
+                status_config(config, raw=args.status_raw,
                     values=tuple(args.values.split(',')) if args.values else None,
                     filter_snap=args.filter_snap,
                     filter_clean=args.filter_clean,
