@@ -123,6 +123,9 @@ def _main():
     parser_send.add_argument('--retry-interval', action="store", type=int,
                              dest='retry_interval', default=10,
                              help='interval in seconds between retries. default is 10')
+    parser_send.add_argument('--max-depth', action="store", type=int,
+                             dest='max_depth',
+                             help='define max depth for child recursion (0 no child, default infinite depth)')
 
     parser_fix = subparsers.add_parser('fix', help='fix zfs snapshot from other format to pyznap')
     parser_fix.add_argument('-t', '--type', action="store",
@@ -283,7 +286,7 @@ def _main():
                 send_config([{'name': args.source, 'dest': [args.dest], 'key': source_key,
                               'dest_keys': dest_key, 'compress': compress, 'exclude': exclude,
                               'raw_send': raw, 'resume': resume, 'dest_auto_create': dest_auto_create,
-                              'retries': retries, 'retry_interval': retry_interval,
+                              'retries': retries, 'retry_interval': retry_interval, 'max_depth': args.max_depth,
                               'send_last_snapshot': send_last_snapshot}])
 
             elif args.source and not args.dest:
