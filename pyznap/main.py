@@ -231,6 +231,7 @@ def _main():
 
         if args.command in ('snap', 'send', 'full', 'status'):
             config_path = args.config if args.config else os.path.join(CONFIG_DIR, 'pyznap.conf')
+            logger.info('Read config={}'.format(config_path))
             config = read_config(config_path)
             if config == None:
                 return 1
