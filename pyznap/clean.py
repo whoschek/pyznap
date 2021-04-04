@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 from subprocess import CalledProcessError
 from .ssh import SSH, SSHException
-from .utils import parse_name
+from .utils import SNAPSHOT_TYPES, parse_name
 import pyznap.pyzfs as zfs
 from .process import DatasetBusyError, DatasetNotFoundError
 
@@ -56,7 +56,7 @@ def clean_filesystem(filesystem, conf):
     logger = logging.getLogger(__name__)
     logger.debug('Cleaning snapshots on {}...'.format(filesystem))
 
-    snapshots = {'frequent': [], 'hourly': [], 'daily': [], 'weekly': [], 'monthly': [], 'yearly': []}
+    snapshots = {t: [] for t in SNAPSHOT_TYPES}
     # catch exception if dataset was destroyed since pyznap was started
     try:
         fs_snapshots = filesystem.snapshots()
@@ -78,23 +78,9 @@ def clean_filesystem(filesystem, conf):
     for snaps in snapshots.values():
         snaps.reverse()
 
-    for snap in snapshots['yearly'][conf['yearly']:]:
-        clean_snap(snap)
-
-    for snap in snapshots['monthly'][conf['monthly']:]:
-        clean_snap(snap)
-
-    for snap in snapshots['weekly'][conf['weekly']:]:
-        clean_snap(snap)
-
-    for snap in snapshots['daily'][conf['daily']:]:
-        clean_snap(snap)
-
-    for snap in snapshots['hourly'][conf['hourly']:]:
-        clean_snap(snap)
-
-    for snap in snapshots['frequent'][conf['frequent']:]:
-        clean_snap(snap)
+    for stype in reversed(SNAPSHOT_TYPES):
+        for snap in snapshots[stype][conf[stype]:]:
+            clean_snap(snap)
 
 
 def clean_config(config):

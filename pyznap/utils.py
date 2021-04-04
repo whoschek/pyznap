@@ -21,6 +21,9 @@ from configparser import (ConfigParser, NoOptionError, MissingSectionHeaderError
 from pkg_resources import resource_string
 
 
+SNAPSHOT_TYPES = ('frequent', 'hourly', 'daily', 'weekly', 'monthly', 'yearly')
+
+
 def exists(executable='', ssh=None):
     """Tests if an executable exists on the system.
 
@@ -84,10 +87,11 @@ def read_config(path):
         return None
 
     config = []
-    options = ['key', 'frequent', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'snap', 'clean',
+    options = ['key', 'snap', 'clean',
                'dest', 'dest_keys', 'compress', 'exclude', 'raw_send', 'resume', 'dest_auto_create',
                'retries', 'retry_interval', 'ignore_not_existing', 'send_last_snapshot', 'max_depth',
                'snap_exclude_property', 'send_exclude_property']
+    options += list(SNAPSHOT_TYPES)
 
     for section in parser.sections():
         dic = {}
@@ -102,7 +106,7 @@ def read_config(path):
             else:
                 if option in ['key']:
                     dic[option] = value if os.path.isfile(value) else None
-                elif option in ['frequent', 'hourly', 'daily', 'weekly', 'monthly', 'yearly']:
+                elif option in SNAPSHOT_TYPES:
                     dic[option] = int(value)
                 elif option in [ 'max_depth']:
                     dic[option] = int(value) if value and value != 'no' else -1
@@ -142,9 +146,8 @@ def read_config(path):
             if parent['name'] == child['_parent']:
                 child_parent = '/'.join(child['name'].split('/')[:-1])  # get parent of child filesystem
                 if child_parent.startswith(parent['name']):
-                    for option in ['key', 'frequent', 'hourly', 'daily', 'weekly', 'monthly', 'yearly',
-                                'snap', 'clean', 'ignore_not_existing', 'send_last_snapshot', 'max_depth',
-                                'snap_exclude_property', 'send_exclude_property']:
+                    for option in ['key', 'snap', 'clean', 'ignore_not_existing', 'send_last_snapshot', 
+                        'max_depth', 'snap_exclude_property', 'send_exclude_property'] + list(SNAPSHOT_TYPES):
                         child[option] = child[option] if child[option] is not None else parent[option]
 
     return config

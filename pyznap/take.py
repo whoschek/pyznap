@@ -12,7 +12,7 @@ import logging
 from datetime import datetime, timedelta
 from subprocess import CalledProcessError
 from .ssh import SSH, SSHException
-from .utils import parse_name
+from .utils import SNAPSHOT_TYPES, parse_name
 import pyznap.pyzfs as zfs
 from .process import DatasetBusyError, DatasetNotFoundError, DatasetExistsError
 
@@ -62,7 +62,7 @@ def take_filesystem(filesystem, conf):
     logger.debug('Taking snapshots on {}...'.format(filesystem))
     now = datetime.now
 
-    snapshots = {'frequent': [], 'hourly': [], 'daily': [], 'weekly': [], 'monthly': [], 'yearly': []}
+    snapshots = {t: [] for t in SNAPSHOT_TYPES}
     # catch exception if dataset was destroyed since pyznap was started
     try:
         fs_snapshots = filesystem.snapshots()
