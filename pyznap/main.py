@@ -144,6 +144,8 @@ def _main():
     parser_status = subparsers.add_parser('status', help='check filesystem snapshots status')
     parser_status.add_argument('--raw', action="store_true",
                              dest='status_raw', help='quiet and raw print status')
+    parser_status.add_argument('--all', action="store_true",
+                             dest='status_all', help='show all ZFS filesystems')
     parser_status.add_argument('--print-config', action="store_true",
                              dest='print_config', help='only print parsed and processed config')
     parser_status.add_argument('--values', action="store",
@@ -307,7 +309,7 @@ def _main():
             if args.print_config:
                 print(str(config))
             else:
-                status_config(config, raw=args.status_raw,
+                status_config(config, raw=args.status_raw, show_all=args.status_all,
                     values=tuple(args.values.split(',')) if args.values else None,
                     filter_snap=args.filter_snap,
                     filter_clean=args.filter_clean,

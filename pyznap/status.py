@@ -19,7 +19,7 @@ import pyznap.pyzfs as zfs
 from .process import DatasetBusyError, DatasetNotFoundError
 
 
-def status_filesystem(filesystem, conf, raw=False, main_fs=False, values=None, filter_snap=None, filter_clean=None, filter_send=None):
+def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False, values=None, filter=None, filter_snap=None, filter_clean=None, filter_send=None):
     """Deletes snapshots of a single filesystem according to conf.
 
     Parameters:
@@ -39,6 +39,7 @@ def status_filesystem(filesystem, conf, raw=False, main_fs=False, values=None, f
     snap = conf.get('snap', False)
     clean = conf.get('clean', False)
     send = bool(conf.get('dest', False))
+    excluded = False
     snap_exclude_property = conf['snap_exclude_property']
     if not main_fs and snap_exclude_property and filesystem.ispropval(snap_exclude_property, check='false'):
         zfs.STATS.add('snap_excluded_count')
@@ -51,7 +52,12 @@ def status_filesystem(filesystem, conf, raw=False, main_fs=False, values=None, f
         logger.debug('Ignore dataset fron send {:s}, have property {:s}=false'.format(filesystem.name, snap_exclude_property))
         send = False
     if not (snap or clean or send):
-        return
+        if show_all:
+            zfs.STATS.add('excluded_count')
+            excluded = True
+        else:
+            return
+    manage_snapshots = snap or clean
 
     if filter_snap is not None and snap != filter_snap:
         return
@@ -94,6 +100,7 @@ def status_filesystem(filesystem, conf, raw=False, main_fs=False, values=None, f
     except (DatasetNotFoundError, DatasetBusyError) as err:
         logger.error('Error while opening {}: {}...'.format(filesystem, err))
         return 1
+    have_snapshots = bool(fs_snapshots)
     # categorize snapshots
     for snaps in fs_snapshots:
         # Ignore snapshots not taken with pyznap
@@ -114,7 +121,7 @@ def status_filesystem(filesystem, conf, raw=False, main_fs=False, values=None, f
     # prepare data for status
     counts = {}
     for s in snapshots.keys():
-        counts[s] = conf.get(s, 0) or 0
+        counts[s] = conf.get(s, 0) or 0 if manage_snapshots else 0
     pyznap_snapshots = sum(len(s) for s in snapshots.values())
 
     # check needed snapshots count
@@ -126,10 +133,15 @@ def status_filesystem(filesystem, conf, raw=False, main_fs=False, values=None, f
     # make status data
     status = {
         'name': str(filesystem),
+        'excluded': excluded,
         'snap': snap,
         'clean': clean,
+        'manage_snapshots': manage_snapshots,
         'send': send,
         'dest': dest,
+        'have_snapshots': have_snapshots,
+        'missing_snapshots': missing_snapshots,
+        'extra_snapshots': extra_snapshots,
         'snapshots': len(fs_snapshots),
         'pyznap_snapshots': pyznap_snapshots,
         'snap_exclude_property': snap_exclude_property,
@@ -150,7 +162,7 @@ def status_filesystem(filesystem, conf, raw=False, main_fs=False, values=None, f
         logger.log(level, 'STATUS: '+str(status))
 
 
-def status_config(config, raw=False, values=None, filter_snap=None, filter_clean=None, filter_send=None):
+def status_config(config, raw=False, show_all=False, values=None, filter_snap=None, filter_clean=None, filter_send=None):
     """Check snapshots status according to strategies given in config. Goes through each config,
     opens up ssh connection if necessary and then recursively calls status_filesystem.
 
@@ -204,7 +216,7 @@ def status_config(config, raw=False, values=None, filter_snap=None, filter_clean
                 filter_snap=filter_snap, filter_clean=filter_clean, filter_send=filter_send)
             # status snapshots of all children that don't have a separate config entry
             for child in children[1:]:
-                status_filesystem(child, conf, raw=raw, values=values,
+                status_filesystem(child, conf, raw=raw, show_all=show_all, values=values,
                     filter_snap=filter_snap, filter_clean=filter_clean, filter_send=filter_send)
         finally:
             if ssh:
