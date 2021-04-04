@@ -190,9 +190,11 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
 
     zfs.STATS.add('zfs_send_filesystem_count')
 
+    was_transfer = False
     if resume_token is not None:
         logger.info('Found resume token. Resuming last transfer of {:s} (~{:s})...'
                     .format(dest_name_log, bytes_fmt(base.stream_size(raw=raw, resume_token=resume_token))))
+        was_transfer = True
         rc = send_snap(base, dest_name, base=None, ssh_dest=ssh_dest, raw=raw, resume=True, resume_token=resume_token)
         if rc:
             return rc
@@ -213,6 +215,7 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
             else:
                 logger.info('No common snapshots on {:s}, sending oldest snapshot {} (~{:s})...'
                             .format(dest_name_log, base, bytes_fmt(base.stream_size(raw=raw))))
+            was_transfer = True
             rc = send_snap(base, dest_name, base=None, ssh_dest=ssh_dest, raw=raw, resume=resume)
             if rc:
                 return rc
@@ -223,10 +226,15 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
     if base.name != snapshot.name:
         logger.info('Updating {:s} with recent snapshot {} from {} (~{:s})...'
                     .format(dest_name_log, snapshot, base.name.split('@')[1], bytes_fmt(snapshot.stream_size(base, raw=raw))))
+        was_transfer = True
         rc = send_snap(snapshot, dest_name, base=base, ssh_dest=ssh_dest, raw=raw, resume=resume)
         if rc:
             return rc
 
+    if was_transfer:
+        zfs.STATS.add('zfs_send_changed_count')
+    else:
+        zfs.STATS.add('zfs_send_unchanged_count')
     logger.info('{:s} is up to date...'.format(dest_name_log))
     return 0
 
