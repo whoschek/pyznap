@@ -477,8 +477,8 @@ class ZFSSnapshot(ZFSDataset):
         else:
             shell = SHELL
             mbuffer, pv = MBUFFER, PV
-        # disable pv if quite mode or if not tty
-        if logger.level > logging.INFO or not sys.stdout.isatty():
+        # disable pv if quite mode
+        if logging.root.level > logging.INFO:
             pv = None
 
         # only compress if send is over ssh
