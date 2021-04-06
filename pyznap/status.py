@@ -82,7 +82,7 @@ def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False
                 else:
                     sending.append(dst)
             dest = sending
-        send = send and dest and any(filter(lambda x: bool(x), dest))
+        send = send and dest and any([x for x in dest if bool(x)]) 
     else:
         dest = None
 
