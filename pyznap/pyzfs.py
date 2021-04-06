@@ -9,6 +9,7 @@
 """
 
 import sys
+import os
 import logging
 import subprocess as sp
 from shlex import quote
@@ -26,7 +27,7 @@ else:
     MBUFFER = None
 
 # Use pv if installed on the system
-if exists('pv'):
+if 'PYZNAP_DISABLE_PV' not in os.environ and exists('pv'):
     PV = lambda size: ['pv', '-f', '-w', '100', '-s', str(size)]
 else:
     PV = None
@@ -525,7 +526,7 @@ class ZFSSnapshot(ZFSDataset):
         if pv and stream_size >= 1024**2: # don't use pv if stream size is too small
             pv_cmd = pv(stream_size)
             if not sys.stdout.isatty():
-                pv_cmd += ['-D', '60', '-i', '60'] # if stdout is redirected, only update pv every 60s
+                pv_cmd += ['-i', '60'] # if stdout is redirected, only update pv every 60s
             logger.debug("Using pv on source: '{:s}'...".format(' '.join(pv_cmd)))
             cmd += ['|'] + pv_cmd
 
