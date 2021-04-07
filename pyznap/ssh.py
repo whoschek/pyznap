@@ -170,7 +170,7 @@ class SSH:
         from pyznap.utils import exists
 
         if 'PYZNAP_DISABLE_MBUFFER' not in os.environ and exists('mbuffer', ssh=self):
-            return lambda mem: ['mbuffer', '-q', '-s', '128K', '-m', '{:d}M'.format(mem)]
+            return lambda mem: ['mbuffer', '-q', '-A', '/bin/false', '-s', '128K', '-m', '{:d}M'.format(mem)]
         else:
             return None
 
