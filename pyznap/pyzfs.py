@@ -22,7 +22,7 @@ SHELL = ['sh', '-c']
 
 # Use mbuffer if installed on the system
 if exists('mbuffer'):
-    MBUFFER = lambda mem: ['mbuffer', '-q', '-A', '/bin/false', '-s', '128K', '-m', '{:d}M'.format(mem)]
+    MBUFFER = lambda mem: ['mbuffer', '-q', '-s', '128K', '-m', '{:d}M'.format(mem)]
 else:
     MBUFFER = None
 
