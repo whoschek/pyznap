@@ -19,7 +19,7 @@ import pyznap.pyzfs as zfs
 from .process import DatasetBusyError, DatasetNotFoundError
 
 
-def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False, values=None, filter=None, filter_snap=None, filter_clean=None, filter_send=None):
+def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False, values=None, filter=None, filter_values=None):
     """Deletes snapshots of a single filesystem according to conf.
 
     Parameters:
@@ -59,11 +59,6 @@ def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False
             return
     manage_snapshots = snap or clean
 
-    if filter_snap is not None and snap != filter_snap:
-        return
-    if filter_clean is not None and clean != filter_clean:
-        return
-
     # increase stats count and check excludes in send
     if snap:
         zfs.STATS.add('snap_count')
@@ -85,9 +80,6 @@ def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False
         send = send and dest and any([x for x in dest if bool(x)]) 
     else:
         dest = None
-
-    if filter_send is not None and send != filter_send:
-        return
 
     if send:
         zfs.STATS.add('send_count')
@@ -150,6 +142,10 @@ def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False
     for stype in SNAPSHOT_TYPES:
         status[stype] = str(len(snapshots[stype]))+'/'+str(counts[stype])
 
+    if filter_values:
+        for f, v in filter_values.items():
+            if status[f] != v:
+                return
     # TODO: last/first snapshot timestamp
     # TODO: remote uptodate check
 
@@ -162,7 +158,7 @@ def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False
         logger.log(level, 'STATUS: '+str(status))
 
 
-def status_config(config, raw=False, show_all=False, values=None, filter_snap=None, filter_clean=None, filter_send=None):
+def status_config(config, raw=False, show_all=False, values=None, filter_values=None):
     """Check snapshots status according to strategies given in config. Goes through each config,
     opens up ssh connection if necessary and then recursively calls status_filesystem.
 
@@ -213,11 +209,11 @@ def status_config(config, raw=False, show_all=False, values=None, filter_snap=No
         else:
             # status snapshots of parent filesystem - ignore exclude property for top fs
             status_filesystem(children[0], conf, main_fs=True, raw=raw, values=values,
-                filter_snap=filter_snap, filter_clean=filter_clean, filter_send=filter_send)
+                filter_values=filter_values)
             # status snapshots of all children that don't have a separate config entry
             for child in children[1:]:
                 status_filesystem(child, conf, raw=raw, show_all=show_all, values=values,
-                    filter_snap=filter_snap, filter_clean=filter_clean, filter_send=filter_send)
+                    filter_values=filter_values)
         finally:
             if ssh:
                 ssh.close()

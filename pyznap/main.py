@@ -150,18 +150,8 @@ def _main():
                              dest='print_config', help='only print parsed and processed config')
     parser_status.add_argument('--values', action="store",
                              dest='values', help='coma separated values to print')
-    parser_status.add_argument('--filter-snap', action="store_const", const=True,
-                             dest='filter_snap', help='show only filesystems to snap')
-    parser_status.add_argument('--filter-no-snap', action="store_const", const=False,
-                             dest='filter_snap', help='show only filesystems not to snap')
-    parser_status.add_argument('--filter-clean', action="store_const", const=True,
-                             dest='filter_clean', help='show only filesystems to clean')
-    parser_status.add_argument('--filter-no-clean', action="store_const", const=False,
-                             dest='filter_clean', help='show only filesystems not to clean')
-    parser_status.add_argument('--filter-send', action="store_const", const=True,
-                             dest='filter_send', help='show only filesystems to send')
-    parser_status.add_argument('--filter-no-send', action="store_const", const=False,
-                             dest='filter_send', help='show only filesystems not to send')
+    parser_status.add_argument('--filter', action="append",
+                             dest='filter_values', help='add filter for col=value')
 
     if len(sys.argv)==1:
         parser.print_help(sys.stderr)
@@ -309,11 +299,16 @@ def _main():
             if args.print_config:
                 print(str(config))
             else:
+                filter_values=None
+                if args.filter_values:
+                    filter_values = {}
+                    for fv in args.filter_values:
+                        f, v = fv.split('=')
+                        v = {'true': True, 'false': False}.get(v.lower(), v)
+                        filter_values[f] = v
                 status_config(config, raw=args.status_raw, show_all=args.status_all,
                     values=tuple(args.values.split(',')) if args.values else None,
-                    filter_snap=args.filter_snap,
-                    filter_clean=args.filter_clean,
-                    filter_send=args.filter_send)
+                    filter_values=filter_values)
 
         zfs.STATS.log()
         logger.info('Finished successfully...\n')
