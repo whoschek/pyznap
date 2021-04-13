@@ -345,8 +345,13 @@ def output_html(data, values=None, tabulator=True):
     print('</head><body>')
     print('<table id="pyznap" border="1">')
     print('<thead><tr>')
+    frozen = True
     for c in cols:
-        print('<th tabulator-headerfilter="input">'+c+'</th>')
+        print('<th tabulator-headerfilter="input"'+(
+            ' tabulator-frozen="true"' if frozen else ''
+        )+'>'+c+'</th>')
+        if c == 'name':
+            frozen = False
     print('</tr></thead>')
     for d in data:
         print('<tr>')
@@ -360,6 +365,8 @@ def output_html(data, values=None, tabulator=True):
         print('<script>\n'
             'var table = new Tabulator("#pyznap", {\n'
             '  headerSortTristate:true, //enable tristate header sort\n'
+            '  selectable:true, //make rows selectable\n'
+            '  movableColumns:true,\n'
             '});\n'
             '</script>')
     print('</body></html>')
