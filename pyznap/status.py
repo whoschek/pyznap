@@ -13,13 +13,20 @@ import logging
 from datetime import datetime
 from fnmatch import fnmatch
 from subprocess import CalledProcessError
+import os
 from .ssh import SSH, SSHException
-from .utils import SNAPSHOT_TYPES, parse_name
+from .utils import SNAPSHOT_TYPES, parse_name, bytes_fmt
 import pyznap.pyzfs as zfs
 from .process import DatasetBusyError, DatasetNotFoundError
 
 
-def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False, values=None, filter=None, filter_values=None):
+ZFS_SIZE_PROPERTIES = ('logicalused', 'used', 'usedbychildren', 'usedbydataset', 'usedbyrefreservation', 'usedbysnapshots', 'written', 'referenced', 'logicalreferenced')
+ZFS_OTHER_PROPERTIES = ('type', 'creation', 'dedup', 'compression', 'compressratio', 'refcompressratio', 'mountpoint', 'origin', 'recordsize', 'primarycache', 'secondarycache', 'logbias')
+
+# output lines
+OUTPUT = []
+
+def status_filesystem(filesystem, conf, output='log', show_all=False, main_fs=False, values=None, filter=None, filter_values=None, filter_exclude=None):
     """Deletes snapshots of a single filesystem according to conf.
 
     Parameters:
@@ -32,8 +39,17 @@ def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False
         mark configured filesystem, ignore exclude zfs property
     """
 
+    global OUTPUT
+
     logger = logging.getLogger(__name__)
-    logger.debug('Checking snapshots on {}...'.format(filesystem))
+
+    fs_name = str(filesystem)
+    if filter_exclude:
+        if any(fnmatch(fs_name, pattern) for pattern in filter_exclude):
+            logger.debug('Exclude filesystem {} by --exclude'.format(fs_name))
+            return
+
+    logger.debug('Checking snapshots on {}...'.format(fs_name))
     zfs.STATS.add('checked_count')
 
     snap = conf.get('snap', False)
@@ -57,7 +73,6 @@ def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False
             excluded = True
         else:
             return
-    manage_snapshots = snap or clean
 
     # increase stats count and check excludes in send
     if snap:
@@ -77,7 +92,7 @@ def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False
                 else:
                     sending.append(dst)
             dest = sending
-        send = send and dest and any([x for x in dest if bool(x)]) 
+        send = send and dest and any([x for x in dest if bool(x)])
     else:
         dest = None
 
@@ -113,8 +128,11 @@ def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False
     # prepare data for status
     counts = {}
     for s in snapshots.keys():
-        counts[s] = conf.get(s, 0) or 0 if manage_snapshots else 0
+        counts[s] = conf.get(s, 0) or 0 if clean else 0
     pyznap_snapshots = sum(len(s) for s in snapshots.values())
+
+    # TODO: remote uptodate check
+    # TODO: T/F oversnapshot/undesnapshot/othersnapshots/unvantedsnapshot on exluded fs
 
     # check needed snapshots count
     missing_snapshots = any([len(snapshots[t]) < counts[t] for t in SNAPSHOT_TYPES])
@@ -124,41 +142,115 @@ def status_filesystem(filesystem, conf, raw=False, show_all=False, main_fs=False
 
     # make status data
     status = {
-        'name': str(filesystem),
+        'hostname': os.uname()[1],
+        'name': fs_name,
+        'conf': conf['name'],
         'excluded': excluded,
-        'snap': snap,
-        'clean': clean,
-        'manage_snapshots': manage_snapshots,
-        'send': send,
-        'dest': dest,
-        'have_snapshots': have_snapshots,
-        'missing_snapshots': missing_snapshots,
-        'extra_snapshots': extra_snapshots,
-        'snapshots': len(fs_snapshots),
-        'pyznap_snapshots': pyznap_snapshots,
-        'snap_exclude_property': snap_exclude_property,
-        'send_exclude_property': send_exclude_property,
+        'do-snap': snap,
+        'do-clean': clean,
+        'do-send': send,
+        'conf-snap_exclude_property': snap_exclude_property,
+        'conf-send_exclude_property': send_exclude_property,
+        'snapshot-have': have_snapshots,
+        'snapshot-missing': missing_snapshots,
+        'snapshot-extra': extra_snapshots,
+        'snapshot-count-all': len(fs_snapshots),
+        'snapshot-count-pyznap': pyznap_snapshots,
+        'snapshot-count-nopyznap': len(fs_snapshots)-pyznap_snapshots,
         }
     for stype in SNAPSHOT_TYPES:
-        status[stype] = str(len(snapshots[stype]))+'/'+str(counts[stype])
+        status['snapshot-types-'+stype] = str(len(snapshots[stype]))+'/'+str(counts[stype])
+
+    def bytes_fmt_no_raw(bytes):
+        return bytes if output=='jsonl' else bytes_fmt(bytes)
+
+    status['dest'] = dest
+    if dest:
+        i = 0
+        snapnames = [snap.name.split('@')[1] for snap in fs_snapshots]
+        for d in dest:
+            if d:
+                _prefix = 'dest-'+str(i)+'-'
+                _type, _dest_name, _user, _host, _port = parse_name(d)
+                status[_prefix+'type'] = _type
+                status[_prefix+'host'] = _host
+                dest_name = fs_name.replace(conf['name'], _dest_name)
+                status[_prefix+'name'] = dest_name
+                # check snapshots on dest
+                common_snapshots = []
+                ssh_dest = get_ssh_for_dest(d, conf)
+                try:
+                    dest_fs = zfs.open(dest_name, ssh=ssh_dest)
+                except DatasetNotFoundError:
+                    dest_snapshots = []
+                    dest_snapnames = []
+                    common = set()
+                except CalledProcessError as err:
+                    message = err.stderr.rstrip()
+                    if message.startswith('ssh: '):
+                        logger.error('Connection issue while opening dest {:s}: \'{:s}\'...'
+                                    .format(dest_name_log, message))
+                        return 2
+                    else:
+                        logger.error('Error while opening dest {:s}: \'{:s}\'...'
+                                    .format(dest_name_log, message))
+                        return 1
+                else:
+                    # find common snapshots between source & dest
+                    dest_snapshots = dest_fs.snapshots()
+                    dest_snapnames = [snap.name.split('@')[1] for snap in dest_snapshots]
+                    common = set(snapnames) & set(dest_snapnames)
+                    if common:
+                        common_snapshots = [s for s in snapnames if s in common]
+                status[_prefix+'snapshot-count'] = len(dest_snapnames)
+                status[_prefix+'snapshot-count-common'] = len(common_snapshots)
+                if common_snapshots:
+                    status[_prefix+'snapshot-common-first'] = common_snapshots[0]
+                    status[_prefix+'snapshot-common-last'] = common_snapshots[-1]
+                if dest_snapnames:
+                    status[_prefix+'snapshot-dest-first'] = dest_snapnames[0]
+                    status[_prefix+'snapshot-dest-last'] = dest_snapnames[-1]
+            i += 1
+
+    def add_snapshot_status(snapshot, label):
+        props = snapshot.getprops()
+        status['snapshot-info-'+label+'-timestamp'] = datetime.fromtimestamp(int(props['creation'][0])).isoformat()
+        status['snapshot-info-'+label+'-referenced'] = bytes_fmt_no_raw(int(props['referenced'][0]))
+        status['snapshot-info-'+label+'-logicalreferenced'] = bytes_fmt_no_raw(int(props['logicalreferenced'][0]))
+
+    if fs_snapshots:
+        add_snapshot_status(fs_snapshots[0], 'first')
+        add_snapshot_status(fs_snapshots[-1], 'last')
+
+    props = filesystem.getprops()
+    for p in ZFS_SIZE_PROPERTIES:
+        status['zfs-'+p] = bytes_fmt_no_raw(int(props[p][0]))
+    for p in ZFS_OTHER_PROPERTIES:
+        status['zfs-'+p] = props[p][0] if p in props else '---'
 
     if filter_values:
         for f, v in filter_values.items():
             if status[f] != v:
                 return
-    # TODO: last/first snapshot timestamp
-    # TODO: remote uptodate check
 
     if values:
-        status = {k: status[k] for k in values}
+        fstatus = {}
+        for v in values:
+            for k in tuple(status.keys()):
+                if fnmatch(k, v):
+                    fstatus[k] = status[k]
+                    del status[k]
+        status = fstatus
 
-    if raw:
+    if output == 'jsonl':
         print(json.dumps(status))
+    elif output == 'html':
+        OUTPUT.append(status)
     else:
         logger.log(level, 'STATUS: '+str(status))
 
 
-def status_config(config, raw=False, show_all=False, values=None, filter_values=None):
+def status_config(config, output='log', show_all=False, values=None, filter_values=None, filter_exclude=None):
     """Check snapshots status according to strategies given in config. Goes through each config,
     opens up ssh connection if necessary and then recursively calls status_filesystem.
 
@@ -208,12 +300,96 @@ def status_config(config, raw=False, show_all=False, values=None, filter_values=
                          .format(name_log, err.stderr.rstrip()))
         else:
             # status snapshots of parent filesystem - ignore exclude property for top fs
-            status_filesystem(children[0], conf, main_fs=True, raw=raw, values=values,
-                filter_values=filter_values)
+            status_filesystem(children[0], conf, main_fs=True, output=output, values=values,
+                filter_values=filter_values, filter_exclude=filter_exclude)
             # status snapshots of all children that don't have a separate config entry
             for child in children[1:]:
-                status_filesystem(child, conf, raw=raw, show_all=show_all, values=values,
-                    filter_values=filter_values)
+                status_filesystem(child, conf, output=output, show_all=show_all, values=values,
+                    filter_values=filter_values, filter_exclude=filter_exclude)
         finally:
             if ssh:
                 ssh.close()
+
+    close_ssh_dests()
+
+    if output == 'html':
+        output_html(OUTPUT, values=values)
+
+
+def output_html(data, values=None, tabulator=True):
+
+    # gel all cols names
+    cols = []
+    for d in data:
+        for c in d.keys():
+            if c not in cols:
+                cols.append(c)
+
+    # filter col names by values
+    if values:
+        fcols = []
+        for v in values:
+            for c in cols:
+                if c not in fcols and fnmatch(c, v):
+                    fcols.append(c)
+        cols = fcols
+
+    print('<html><head>')
+    print('<title>pyznap {}</title>'.format(os.uname()[1]))
+    if tabulator:
+        print('<link href="https://unpkg.com/tabulator-tables/dist/css/tabulator.min.css" rel="stylesheet">')
+        print('<script type="text/javascript" src="https://unpkg.com/tabulator-tables/dist/js/tabulator.min.js"></script>')
+    print('</head><body>')
+    print('<table id="pyznap" border="1">')
+    print('<thead><tr>')
+    for c in cols:
+        print('<th tabulator-headerfilter="input">'+c+'</th>')
+    print('</tr></thead>')
+    for d in data:
+        print('<tr>')
+        for c in cols:
+            v = str(d[c]) if c in d else ''
+            print('<td>'+v+'</td>')
+        print('</tr>')
+
+    print('</table>')
+    if tabulator:
+        print('<script>\n'
+            'var table = new Tabulator("#pyznap", {\n'
+            '  headerSortTristate:true, //enable tristate header sort\n'
+            '});\n'
+            '</script>')
+    print('</body></html>')
+
+
+SSH_DESTS = {}
+
+def get_ssh_for_dest(dest, conf):
+
+    try:
+        _type, fsname, user, host, port = parse_name(dest)
+    except ValueError as err:
+        logger = logging.getLogger(__name__)
+        logger.error('Could not parse {:s}: {}...'.format(name, err))
+        raise
+
+    if _type == 'ssh':
+        dest_key = user+'@'+host+':'+str(port)
+        if dest_key in SSH_DESTS:
+            return SSH_DESTS[dest_key]
+        try:
+            ssh = SSH(user, host, port=port, key=conf['key'])
+        except (FileNotFoundError, SSHException):
+            raise
+        SSH_DESTS[dest_key] = ssh
+    else:
+        ssh = None
+
+    return ssh
+
+def close_ssh_dests():
+    global SSH_DESTS
+    # close is called on destroy
+    # for dest in SSH_DESTS.values():
+    #     dest.close()
+    SSH_DESTS = {}

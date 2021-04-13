@@ -142,8 +142,8 @@ def _main():
     subparsers.add_parser('full', help='full cycle: snap --take / send / snap --clean')
 
     parser_status = subparsers.add_parser('status', help='check filesystem snapshots status')
-    parser_status.add_argument('--raw', action="store_true",
-                             dest='status_raw', help='quiet and raw print status')
+    parser_status.add_argument('--format', action="store", default='log', choices=['log', 'jsonl', 'html'],
+                             dest='status_format', help='status output format')
     parser_status.add_argument('--all', action="store_true",
                              dest='status_all', help='show all ZFS filesystems')
     parser_status.add_argument('--print-config', action="store_true",
@@ -152,6 +152,8 @@ def _main():
                              dest='values', help='coma separated values to print')
     parser_status.add_argument('--filter', action="append",
                              dest='filter_values', help='add filter for col=value')
+    parser_status.add_argument('--exclude', action="append",
+                             dest='filter_exclude', help='exclude name filesystems (fnmatch)')
 
     if len(sys.argv)==1:
         parser.print_help(sys.stderr)
@@ -174,7 +176,7 @@ def _main():
         loglevel = logging.WARNING
     if args.verbose:
         loglevel = logging.DEBUG
-    if args.command == 'status' and args.status_raw :
+    if args.command == 'status' and args.status_format != 'log':
         # for raw status only error show
         loglevel = logging.ERROR
     if args.trace:
@@ -191,7 +193,7 @@ def _main():
     if loglevel < logging.WARNING:
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(console_fmt)
-        console_handler.addFilter(lambda record: record.levelno < logging.WARNING)
+        console_handler.addFilter(lambda record: record.levelno < 30) # logging.WARNING make exception in destroy
         console_handler.setLevel(loglevel)
         root_logger.addHandler(console_handler)
     console_err_handler = logging.StreamHandler(sys.stderr)
@@ -306,9 +308,9 @@ def _main():
                         f, v = fv.split('=')
                         v = {'true': True, 'false': False}.get(v.lower(), v)
                         filter_values[f] = v
-                status_config(config, raw=args.status_raw, show_all=args.status_all,
+                status_config(config, output=args.status_format, show_all=args.status_all,
                     values=tuple(args.values.split(',')) if args.values else None,
-                    filter_values=filter_values)
+                    filter_values=filter_values, filter_exclude=args.filter_exclude)
 
         zfs.STATS.log()
         logger.info('Finished successfully...\n')

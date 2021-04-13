@@ -32,8 +32,8 @@ You also need the `faketime` program for some tests to simulate pyznap running o
 I suggest installing [virtualenv & virtualenvwrapper](http://docs.python-guide.org/en/latest/dev/virtualenvs/),
 so you don't clutter your system python installation with additional packages.
 
-pyznap uses `mbuffer` and `lzop` (by default) to speed up zfs send/recv, and `pv` to show progress, 
-but also works if they are not installed. Other supported compression methods are: `none`, `lz4`, 
+pyznap uses `mbuffer` and `lzop` (by default) to speed up zfs send/recv, and `pv` to show progress,
+but also works if they are not installed. Other supported compression methods are: `none`, `lz4`,
 `gzip`, `pigz`, `bzip2` and `xz`.
 
 Note that ZFS needs root access to run commands. Due to this you should install pyznap under your
@@ -245,6 +245,11 @@ Run `pyznap -h` to see all available options.
 + status
 
   Check snapshots state and print counts with info.
+
+  Example stats as html table with petl https://pypi.org/project/petl/: `pyznap status --raw | petl 'fromjson(None, lines=True).tohtml("/tmp/pyznap.html")'`
+  Table manipulation in Crome with extension Tabulazer https://chrome.google.com/webstore/detail/tabulazer-table-filter-an/ikfbkffbgkdghhnjfoomdkeifljlepah
+
+  `pyznap status --raw --values 'name,zfs-origin,conf,do-*,snapshot-info-*-timestamp,snapshot-count-*,dest-0-snapshot-count*,dest-0-host,dest-0-name' | petl 'fromjson(None, lines=True).tohtml("/tmp/pyznap.html")'`
 
 
 #### Usage examples ####

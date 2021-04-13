@@ -82,12 +82,16 @@ class SSH:
                     '-o', 'ControlPath={:s}'.format(self.socket), '-p', str(self.port),
                     '-o', 'ServerAliveInterval=30', '{:s}@{:s}'.format(self.user, self.host)]
 
+        self.logger.log(8, 'SSH: init socket={}'.format(self.socket))
+
         # setup ControlMaster. Process will hang if we call Popen with stderr=sp.PIPE, see
         # https://lists.mindrot.org/pipermail/openssh-unix-dev/2014-January/031976.html
         try:
             run(['exit'], timeout=10, ssh=self, stderr=sp.DEVNULL)
         except (sp.CalledProcessError, sp.TimeoutExpired):
             pass
+
+        self._closed = False
 
         # check if ssh connection is up
         try:
@@ -106,6 +110,7 @@ class SSH:
         self.mbuffer = self.setup_mbuffer()
         # set up pv
         self.pv = self.setup_pv()
+
 
 
     def __str__(self):
@@ -194,8 +199,12 @@ class SSH:
     def close(self):
         """Closes the ssh connection by invoking '-O exit' (deletes socket file)"""
 
+        if self._closed:
+            return
+        self.logger.log(8, 'SSH: close socket={}'.format(self.socket))
         try:
             run(['-O', 'exit'], timeout=5, stderr=sp.PIPE, ssh=self)
+            self._closed = True
         except (sp.CalledProcessError, sp.TimeoutExpired):
             pass
 
