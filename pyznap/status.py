@@ -174,7 +174,10 @@ def status_filesystem(filesystem, conf, output='log', show_all=False, main_fs=Fa
                 _type, _dest_name, _user, _host, _port = parse_name(d)
                 status[_prefix+'type'] = _type
                 status[_prefix+'host'] = _host
-                dest_name = fs_name.replace(conf['name'], _dest_name)
+                if conf['name']:
+                    dest_name = fs_name.replace(conf['name'], _dest_name)
+                else:
+                    dest_name = _dest_name+'/'+fs_name
                 status[_prefix+'name'] = dest_name
                 # check snapshots on dest
                 common_snapshots = []
