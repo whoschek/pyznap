@@ -324,9 +324,11 @@ def output_html(data, values=None, tabulator=True):
     # gel all cols names
     cols = []
     for d in data:
+        i = 0
         for c in d.keys():
             if c not in cols:
-                cols.append(c)
+                cols.insert(i, c)
+            i = cols.index(c)+1
 
     # filter col names by values
     if values:
