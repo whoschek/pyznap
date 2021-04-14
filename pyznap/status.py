@@ -347,13 +347,8 @@ def output_html(data, values=None, tabulator=True):
     print('</head><body>')
     print('<table id="pyznap" border="1">')
     print('<thead><tr>')
-    frozen = True
     for c in cols:
-        print('<th tabulator-headerfilter="input"'+(
-            ' tabulator-frozen="true"' if frozen else ''
-        )+'>'+c+'</th>')
-        if c == 'name':
-            frozen = False
+        print('<th>'+c+'</th>')
     print('</tr></thead>')
     for d in data:
         print('<tr>')
@@ -364,13 +359,43 @@ def output_html(data, values=None, tabulator=True):
 
     print('</table>')
     if tabulator:
-        print('<script>\n'
-            'var table = new Tabulator("#pyznap", {\n'
-            '  headerSortTristate:true, //enable tristate header sort\n'
-            '  selectable:true, //make rows selectable\n'
-            '  movableColumns:true,\n'
-            '});\n'
-            '</script>')
+        print('''
+            <script>
+            //define row context menu
+            var headerMenu = [
+                {
+                    label:"Hide Column",
+                    action:function(e, column){
+                        column.hide();
+                    }
+                },
+            ]
+            var table = new Tabulator("#pyznap", {
+              tooltipsHeader:true, //enable header tooltips
+              tooltips:true,
+              history:true,
+              headerSortTristate:true, //enable tristate header sort
+              selectable:true, //make rows selectable
+              movableColumns:true,
+              movableRows: true, //enable user movable rows
+              autoColumns:true,
+              autoColumnsDefinitions:function(definitions){
+                    //definitions - array of column definition objects
+                    var frozenCols = ['id', 'hostname', 'name'];
+
+                    definitions.forEach((column) => {
+                        column.headerMenu = headerMenu; // add header filter to every column
+                        column.headerFilter = "input";
+                        if (frozenCols.indexOf(column.field)>-1) {
+                            column.frozen = true;
+                        }
+                    });
+
+                    return definitions;
+                  },
+            });
+            </script>
+            ''')
     print('</body></html>')
 
 
