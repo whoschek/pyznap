@@ -292,7 +292,7 @@ def send_config(config):
                          .format(source_name_log, err.stderr.rstrip()))
             continue
 
-        send_exclude_property = conf['send_exclude_property'] if 'send_exclude_property' in conf else None
+        send_exclude_property = conf.get('send_exclude_property')
 
         # Send to every backup destination
         for backup_dest in conf['dest']:
@@ -306,7 +306,7 @@ def send_config(config):
             # check if resumable send was requested
             resume = conf['resume'].pop(0) if conf.get('resume', None) else False
             # check if send_last_snapshot was requested
-            send_last_snapshot = conf['send_last_snapshot'].pop(0) if conf.get('send_last_snapshot', None) else False
+            send_last_snapshot = conf.get('send_last_snapshot').pop(0) if conf.get('send_last_snapshot', None) else False
             # check if we should create dataset if it doesn't exist
             dest_auto_create = conf['dest_auto_create'].pop(0) if conf.get('dest_auto_create', None) else False
 

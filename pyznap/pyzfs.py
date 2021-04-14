@@ -100,7 +100,7 @@ def find_exclude(conf, config):
 
     if _type == 'ssh':
         try:
-            ssh = SSH(user, host, port=port, key=conf['key'])
+            ssh = SSH(user, host, port=port, key=conf.get('key'))
         except (FileNotFoundError, SSHException) as err:
             logger.error('SSH error {:s}: {}...'.format(name, err))
             raise

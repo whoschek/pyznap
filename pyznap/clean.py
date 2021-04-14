@@ -119,13 +119,13 @@ def clean_config(config):
             ssh = None
             name_log = fsname
 
-        snap_exclude_property = conf['snap_exclude_property']
+        snap_exclude_property = conf.get('snap_exclude_property')
 
         try:
             # Children includes the base filesystem (named 'fsname')
             children = zfs.find_exclude(conf, config)
         except DatasetNotFoundError as err:
-            if conf['ignore_not_existing']:
+            if conf.get('ignore_not_existing'):
                 logger.warning('Dataset {:s} does not exist...'.format(name_log))
             else:
                 logger.error('Dataset {:s} does not exist...'.format(name_log))

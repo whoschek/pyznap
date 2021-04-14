@@ -290,7 +290,7 @@ def status_config(config, output='log', show_all=False, values=None, filter_valu
             # Children includes the base filesystem (named 'fsname')
             children = zfs.find_exclude(conf, config)
         except DatasetNotFoundError as err:
-            if conf['ignore_not_existing']:
+            if conf.get('ignore_not_existing'):
                 logger.warning('Dataset {:s} does not exist...'.format(name_log))
             else:
                 logger.error('Dataset {:s} does not exist...'.format(name_log))
