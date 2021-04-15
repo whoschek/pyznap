@@ -10,6 +10,7 @@
 
 import json
 import logging
+from collections import OrderedDict
 from datetime import datetime
 from fnmatch import fnmatch
 from subprocess import CalledProcessError
@@ -141,23 +142,22 @@ def status_filesystem(filesystem, conf, output='log', show_all=False, main_fs=Fa
         level = logging.WARNING
 
     # make status data
-    status = {
-        'hostname': os.uname()[1],
-        'name': fs_name,
-        'conf': conf['name'],
-        'excluded': excluded,
-        'do-snap': snap,
-        'do-clean': clean,
-        'do-send': send,
-        'conf-snap_exclude_property': snap_exclude_property,
-        'conf-send_exclude_property': send_exclude_property,
-        'snapshot-have': have_snapshots,
-        'snapshot-missing': missing_snapshots,
-        'snapshot-extra': extra_snapshots,
-        'snapshot-count-all': len(fs_snapshots),
-        'snapshot-count-pyznap': pyznap_snapshots,
-        'snapshot-count-nopyznap': len(fs_snapshots)-pyznap_snapshots,
-        }
+    status = OrderedDict()
+    status['hostname'] = os.uname()[1]
+    status['name'] = fs_name
+    status['conf'] = conf['name']
+    status['excluded'] = excluded
+    status['do-snap'] = snap
+    status['do-clean'] = clean
+    status['do-send'] = send
+    status['conf-snap_exclude_property'] = snap_exclude_property
+    status['conf-send_exclude_property'] = send_exclude_property
+    status['snapshot-have'] = have_snapshots
+    status['snapshot-missing'] = missing_snapshots
+    status['snapshot-extra'] = extra_snapshots
+    status['snapshot-count-all'] = len(fs_snapshots)
+    status['snapshot-count-pyznap'] = pyznap_snapshots
+    status['snapshot-count-nopyznap'] = len(fs_snapshots)-pyznap_snapshots
     for stype in SNAPSHOT_TYPES:
         status['snapshot-types-'+stype] = str(len(snapshots[stype]))+'/'+str(counts[stype])
 
@@ -250,7 +250,7 @@ def status_filesystem(filesystem, conf, output='log', show_all=False, main_fs=Fa
     elif output == 'html':
         OUTPUT.append(status)
     else:
-        logger.log(level, 'STATUS: '+str(status))
+        logger.log(level, 'STATUS: '+json.dumps(status))
 
 
 def status_config(config, output='log', show_all=False, values=None, filter_values=None, filter_exclude=None):
