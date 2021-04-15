@@ -54,7 +54,7 @@ MAPS={
 
 def re_get_group(r, group, default=0):
     try:
-        result = r[group]
+        result = r.group(group)
     except IndexError:
         result =  default
     return result
