@@ -9,6 +9,7 @@
 """
 
 import logging
+import sys
 import re
 from datetime import datetime
 from fnmatch import fnmatch
