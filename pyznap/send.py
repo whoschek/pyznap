@@ -213,6 +213,7 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
                 for snap in snapshots:
                     if send_last_snapshot in snap.name.split('@')[1]:
                         base = snap
+                        break
                 logger.info('No common snapshots on {:s}, sending last snapshot {} (~{:s})...'
                             .format(dest_name_log, base, bytes_fmt(base.stream_size(raw=raw))))
             else:
