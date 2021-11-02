@@ -114,7 +114,7 @@ def read_config(path):
                     dic[option] = {'yes': True, 'no': False}.get(value.lower(), None)
                 elif option in ['snap_exclude_property', 'send_exclude_property']:
                     dic[option] = value.strip() if value.strip() else False
-                elif option in ['dest', 'compress']:
+                elif option in ['dest', 'compress', 'send_last_snapshot']:
                     dic[option] = [i.strip() for i in value.split(',')]
                 elif option in ['dest_keys']:
                     dic[option] = [i.strip() if os.path.isfile(i.strip()) else None
@@ -122,7 +122,7 @@ def read_config(path):
                 elif option in ['exclude']:
                     dic[option] = [[i.strip() for i in s.strip().split(' ')] if s.strip() else None
                                     for s in value.split(',')]
-                elif option in ['raw_send', 'resume', 'dest_auto_create', 'send_last_snapshot']:
+                elif option in ['raw_send', 'resume', 'dest_auto_create']:
                     dic[option] = [{'yes': True, 'no': False}.get(i.strip().lower(), None)
                                    for i in value.split(',')]
                 elif option in ['retries', 'retry_interval']:
@@ -146,7 +146,7 @@ def read_config(path):
             if parent['name'] == child['_parent']:
                 child_parent = '/'.join(child['name'].split('/')[:-1])  # get parent of child filesystem
                 if child_parent.startswith(parent['name']):
-                    for option in ['key', 'snap', 'clean', 'ignore_not_existing', 'send_last_snapshot', 
+                    for option in ['key', 'snap', 'clean', 'ignore_not_existing', 'send_last_snapshot',
                         'max_depth', 'snap_exclude_property', 'send_exclude_property'] + list(SNAPSHOT_TYPES):
                         child[option] = child[option] if child[option] is not None else parent[option]
 
