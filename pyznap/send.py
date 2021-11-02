@@ -209,9 +209,9 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
             return 1
         else:
             if send_last_snapshot:
+                base = snapshot
                 logger.info('No common snapshots on {:s}, sending last snapshot {} (~{:s})...'
                             .format(dest_name_log, base, bytes_fmt(base.stream_size(raw=raw))))
-                base = snapshot
             else:
                 logger.info('No common snapshots on {:s}, sending oldest snapshot {} (~{:s})...'
                             .format(dest_name_log, base, bytes_fmt(base.stream_size(raw=raw))))
