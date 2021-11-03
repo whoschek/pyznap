@@ -51,8 +51,10 @@ def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=F
         zfs.STATS.add('zfs_send_snap_count')
         if get_dry_run():
             zfs.STATS.add('send_size', stream_size)
-            logger.warning('DRY_RUN: send_snapshot {} --> {} base:{} size:{} resume_token:{}'.format(
-                snapshot.name, dest_name_log, base, stream_size, resume_token
+            logger.warning('DRY_RUN: send_snapshot {} --> {} base:{} size:{} resume_token:{} compress:{}/{}'.format(
+                snapshot.name, dest_name_log, base, stream_size, resume_token,
+                ssh_source.compress if ssh_source else None,
+                ssh_dest.decompress if ssh_dest else None
             ))
             return 0
 
@@ -284,7 +286,7 @@ def send_config(config):
 
         try:
             # Children includes the base filesystem (named 'source_name')
-            source_children = zfs.find_exclude(conf, config)
+            source_children = zfs.find_exclude(conf, config, ssh=ssh_source)
         except DatasetNotFoundError as err:
             logger.error('Source {:s} does not exist...'.format(source_name_log))
             continue

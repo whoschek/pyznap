@@ -87,7 +87,7 @@ def find(path=None, ssh=None, max_depth=None, types=[]):
     return [open(name, ssh=ssh, type=type) for name, type in out]
 
 
-def find_exclude(conf, config):
+def find_exclude(conf, config, ssh=None):
     """Lists child filesystems and volumes for a given path
     exclude filesystems with own config"""
 
@@ -101,11 +101,13 @@ def find_exclude(conf, config):
         raise
 
     if _type == 'ssh':
-        try:
-            ssh = SSH(user, host, port=port, key=conf.get('key'))
-        except (FileNotFoundError, SSHException) as err:
-            logger.error('SSH error {:s}: {}...'.format(name, err))
-            raise
+        if ssh == None:
+            try:
+                compress = conf['compress'].pop(0) if conf.get('compress', None) else 'lzop'
+                ssh = SSH(user, host, port=port, key=conf.get('key'), compress=compress)
+            except (FileNotFoundError, SSHException) as err:
+                logger.error('SSH error {:s}: {}...'.format(name, err))
+                raise
         name_log = '{:s}@{:s}:{:s}'.format(user, host, fsname)
     else:
         ssh = None

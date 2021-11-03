@@ -117,7 +117,7 @@ class SSH:
         return '{:s}@{:s}:{:d}'.format(self.user, self.host, self.port)
 
     def __repr__(self):
-        return '{:s}@{:s}:{:d}'.format(self.user, self.host, self.port)
+        return '{:s}@{:s}:{:d} (compress={:s}:{:s})'.format(self.user, self.host, self.port, str(self.compress), str(self.decompress))
 
 
     def setup_compression(self, _type):
@@ -159,6 +159,8 @@ class SSH:
             self.logger.warning('{:s} does not exist on {:s}@{:s}, continuing without compression...'
                                 .format(_type, self.user, self.host))
             return None, None
+
+        self.logger.log(8, 'SSH: use compression {:s}'.format(_type))
 
         return algos[_type]
 
