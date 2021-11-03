@@ -35,7 +35,7 @@ else:
 
 class STATS:
     data = {}
-    
+
     @classmethod
     def add(cls, name, value=1):
         if name in cls.data:
@@ -91,6 +91,8 @@ def find_exclude(conf, config):
     """Lists child filesystems and volumes for a given path
     exclude filesystems with own config"""
 
+    logger = logging.getLogger(__name__)
+
     name = conf['name']
     try:
         _type, fsname, user, host, port = parse_name(name)
@@ -124,7 +126,7 @@ def find_exclude(conf, config):
 
     # exclude filesystem with own configuration
     return [
-        open(name, ssh=ssh, type=type) 
+        open(name, ssh=ssh, type=type)
             for name, type in out
                 if not (prefix+name+'/').startswith(sub_config_names)
         ]
