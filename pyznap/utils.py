@@ -8,6 +8,7 @@
     :license: GPLv3, see LICENSE for more details.
 """
 
+import glob
 import os
 import re
 import logging
@@ -75,13 +76,18 @@ def read_config(path):
 
     logger = logging.getLogger(__name__)
 
-    if not os.path.isfile(path):
-        logger.error('Error while loading config: File {:s} does not exist.'.format(path))
-        return None
+    if os.path.isfile(path):
+        cfgfiles = path
+    else:
+        cfgfiles = glob.glob(os.path.expanduser(path))
+        if cfgfiles == []:
+            logger.error('Error while loading config: File {:s} does not exist.'.format(path))
+            return None
 
     parser = ConfigParser()
     try:
-        parser.read(path)
+        files = parser.read(cfgfiles)
+        logger.info('Parsed configs: '+str(files))
     except (MissingSectionHeaderError, DuplicateSectionError, DuplicateOptionError) as e:
         logger.error('Error while loading config: {}'.format(e))
         return None

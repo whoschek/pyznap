@@ -167,7 +167,7 @@ Run `pyznap -h` to see all available options.
 
 + --config
 
-  Specify config file. Default is `/etc/pyznap/pyznap.conf`.
+  Specify config file or glob for files. Default is `/etc/pyznap/pyznap.conf`.
 
 + -v, --verbose
 
