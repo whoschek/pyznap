@@ -165,9 +165,13 @@ Here is a list of all options you can set in the config fie:
 
 Run `pyznap -h` to see all available options.
 
-+ --config
++ --config FILE_OR_GLOB
 
   Specify config file or glob for files. Default is `/etc/pyznap/pyznap.conf`.
+
++ -m, --matching FNMATCH
+
+  Specify fnmacht string, for filtering source filesystems.
 
 + -v, --verbose
 

@@ -115,7 +115,7 @@ def take_filesystem(filesystem, conf):
         take_snap(filesystem, 'frequent')
 
 
-def take_config(config):
+def take_config(config, settings={}):
     """Takes snapshots according to strategy given in config.
 
     Parameters:
@@ -154,7 +154,7 @@ def take_config(config):
 
         try:
             # Children includes the base filesystem (named 'fsname')
-            children = zfs.find_exclude(conf, config)
+            children = zfs.find_exclude(conf, config, matching=settings['matching'])
         except DatasetNotFoundError as err:
             if conf.get('ignore_not_existing'):
                 logger.warning('Dataset {:s} does not exist...'.format(name_log))

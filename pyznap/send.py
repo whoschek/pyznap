@@ -245,7 +245,7 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
     return 0
 
 
-def send_config(config):
+def send_config(config, settings={}):
     """Tries to sync all entries in the config to their dest. Finds all children of the filesystem
     and calls send_filesystem on each of them.
 
@@ -286,7 +286,7 @@ def send_config(config):
 
         try:
             # Children includes the base filesystem (named 'source_name')
-            source_children = zfs.find_exclude(conf, config, ssh=ssh_source)
+            source_children = zfs.find_exclude(conf, config, ssh=ssh_source, matching=settings['matching'])
         except DatasetNotFoundError as err:
             logger.error('Source {:s} does not exist...'.format(source_name_log))
             continue

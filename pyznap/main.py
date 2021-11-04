@@ -61,6 +61,10 @@ def _main():
         Exit code
     """
 
+    settings = {
+        "matching": None,
+    }
+
     parser = ArgumentParser(prog='pyznap', description='ZFS snapshot tool written in python (version='+__version__+')')
     parser.add_argument('-q', '--quiet', action="store_true",
                         dest="quiet", help='quiet logging, only errors shown (WARNING)')
@@ -74,6 +78,8 @@ def _main():
                         dest="syslog", help='add logging to syslog (INFO)')
     parser.add_argument('--config', action="store",
                         dest="config", help='path to config file')
+    parser.add_argument('-m', '--matching', action="store",
+                        dest="matching", help='only process matching filesystems')
     parser.add_argument('--pidfile', action="store",
                         dest="pidfile", default=None, help='path to pid file')
     parser.add_argument('-V', '--version', action="store_true",
@@ -215,6 +221,9 @@ def _main():
     if args.dry_run:
         set_dry_run()
 
+    if args.matching:
+        settings['matching'] =  args.matching
+
     if args.pidfile is not None:
         if not check_pid(args.pidfile):
             logger.info('pidfile {} exists, exiting'.format(args.pidfile))
@@ -235,9 +244,9 @@ def _main():
             create_config(path)
 
         elif args.command == 'full':
-            take_config(config)
-            send_config(config)
-            clean_config(config)
+            take_config(config, settings)
+            send_config(config, settings)
+            clean_config(config, settings)
 
         elif args.command == 'snap':
             # Default if no args are given
@@ -245,10 +254,10 @@ def _main():
                 args.full = True
 
             if args.take or args.full:
-                take_config(config)
+                take_config(config, settings)
 
             if args.clean or args.full:
-                clean_config(config)
+                clean_config(config, settings)
 
         elif args.command == 'send':
             if args.source and args.dest:
@@ -289,7 +298,7 @@ def _main():
             elif args.dest and not args.source:
                 logger.error('Missing source...')
             else:
-                send_config(config)
+                send_config(config, settings)
 
         elif args.command == 'fix':
             tmap = args.map
@@ -310,7 +319,7 @@ def _main():
                         filter_values[f] = v
                 status_config(config, output=args.status_format, show_all=args.status_all,
                     values=tuple(args.values.split(',')) if args.values else None,
-                    filter_values=filter_values, filter_exclude=args.filter_exclude)
+                    filter_values=filter_values, filter_exclude=args.filter_exclude, settings=settings)
 
         zfs.STATS.log()
         logger.info('Finished successfully...\n')

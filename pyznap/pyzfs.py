@@ -12,6 +12,7 @@ import sys
 import os
 import logging
 import subprocess as sp
+from fnmatch import fnmatch
 from shlex import quote
 from .process import check_output, check_output_dry, set_dry_run, DatasetNotFoundError, DatasetBusyError
 from .utils import exists, bytes_fmt, parse_name
@@ -87,7 +88,7 @@ def find(path=None, ssh=None, max_depth=None, types=[]):
     return [open(name, ssh=ssh, type=type) for name, type in out]
 
 
-def find_exclude(conf, config, ssh=None):
+def find_exclude(conf, config, ssh=None, matching=None):
     """Lists child filesystems and volumes for a given path
     exclude filesystems with own config"""
 
@@ -125,6 +126,14 @@ def find_exclude(conf, config, ssh=None):
         prefix = ':'.join(name.split(':')[:-1])+':'
     else:
         prefix = ''
+
+    # filter by match if specified
+    if matching is not None:
+        out = [
+            [ name, type ]
+            for name, type in out
+                if fnmatch(prefix+name, matching)
+        ]
 
     # exclude filesystem with own configuration
     return [

@@ -253,7 +253,7 @@ def status_filesystem(filesystem, conf, output='log', show_all=False, main_fs=Fa
         logger.log(level, 'STATUS: '+json.dumps(status))
 
 
-def status_config(config, output='log', show_all=False, values=None, filter_values=None, filter_exclude=None):
+def status_config(config, output='log', show_all=False, values=None, filter_values=None, filter_exclude=None, settings={}):
     """Check snapshots status according to strategies given in config. Goes through each config,
     opens up ssh connection if necessary and then recursively calls status_filesystem.
 
@@ -288,7 +288,7 @@ def status_config(config, output='log', show_all=False, values=None, filter_valu
 
         try:
             # Children includes the base filesystem (named 'fsname')
-            children = zfs.find_exclude(conf, config)
+            children = zfs.find_exclude(conf, config, matching=settings['matching'])
         except DatasetNotFoundError as err:
             if conf.get('ignore_not_existing'):
                 logger.warning('Dataset {:s} does not exist...'.format(name_log))

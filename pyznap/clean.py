@@ -83,7 +83,7 @@ def clean_filesystem(filesystem, conf):
             clean_snap(snap)
 
 
-def clean_config(config):
+def clean_config(config, settings={}):
     """Deletes old snapshots according to strategies given in config. Goes through each config,
     opens up ssh connection if necessary and then recursively calls clean_filesystem.
 
@@ -123,7 +123,7 @@ def clean_config(config):
 
         try:
             # Children includes the base filesystem (named 'fsname')
-            children = zfs.find_exclude(conf, config)
+            children = zfs.find_exclude(conf, config, matching=settings['matching'])
         except DatasetNotFoundError as err:
             if conf.get('ignore_not_existing'):
                 logger.warning('Dataset {:s} does not exist...'.format(name_log))
