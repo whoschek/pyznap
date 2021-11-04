@@ -122,7 +122,7 @@ def find_exclude(conf, config, ssh=None):
     sub_config_names = tuple([ c['name']+'/' for c in config if '_parent' in c and c['_parent']==name])
 
     if ssh:
-        prefix = ':'.join(name.split(':')[:-1])
+        prefix = ':'.join(name.split(':')[:-1])+':'
     else:
         prefix = ''
 

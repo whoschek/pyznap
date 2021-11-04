@@ -192,11 +192,11 @@ def status_filesystem(filesystem, conf, output='log', show_all=False, main_fs=Fa
                     message = err.stderr.rstrip()
                     if message.startswith('ssh: '):
                         logger.error('Connection issue while opening dest {:s}: \'{:s}\'...'
-                                    .format(dest_name_log, message))
+                                    .format(dest_name, message))
                         return 2
                     else:
                         logger.error('Error while opening dest {:s}: \'{:s}\'...'
-                                    .format(dest_name_log, message))
+                                    .format(dest_name, message))
                         return 1
                 else:
                     # find common snapshots between source & dest
@@ -407,7 +407,7 @@ def get_ssh_for_dest(dest, conf):
         _type, fsname, user, host, port = parse_name(dest)
     except ValueError as err:
         logger = logging.getLogger(__name__)
-        logger.error('Could not parse {:s}: {}...'.format(name, err))
+        logger.error('Could not parse {:s}: {}...'.format(dest, err))
         raise
 
     if _type == 'ssh':
