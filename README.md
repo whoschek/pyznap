@@ -158,7 +158,7 @@ Here is a list of all options you can set in the config fie:
 | `dest_auto_create`      | List of yes/no  | Automatically create missing root datasets. Comma-separated list for multiple dest |
 | `retries`               | List of integer | Number of retries on connection issues. Comma-separated list for multiple dest |
 | `retry_interval`        | List of integer | Time in seconds between retries. Comma-separated list for multiple dest |
-| `send_last_snapshot`    | string          | Start send with last snapshot if defined (select snapshot containig string (eg. daily) or last) |
+| `send_last_snapshot`    | string          | Start send with last snapshot if defined (select snapshot containig string (eg. daily) or last, 'no' disable) |
 
 
 #### Command line options ####

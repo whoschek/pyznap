@@ -313,6 +313,8 @@ def send_config(config, settings={}):
             resume = conf['resume'].pop(0) if conf.get('resume', None) else False
             # check if send_last_snapshot was requested
             send_last_snapshot = conf['send_last_snapshot'].pop(0) if conf.get('send_last_snapshot', None) else False
+            if send_last_snapshot == 'no':
+                send_last_snapshot = False
             # check if we should create dataset if it doesn't exist
             dest_auto_create = conf['dest_auto_create'].pop(0) if conf.get('dest_auto_create', None) else False
 
