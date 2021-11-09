@@ -189,6 +189,10 @@ Run `pyznap -h` to see all available options.
 
   It also logs to the syslog with level INFO
 
++ --logconfig
+
+  Add config name to log message
+
 + -n, --dry-run
 
   Skip execution for commands changing filesystem.

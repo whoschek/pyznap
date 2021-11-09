@@ -34,7 +34,7 @@ def check_pid(pidfile_path):
     from sys import argv
     from os import path, unlink, getpid
     import psutil
-    
+
     if os.path.exists(pidfile_path):
         # pidfile exists... inspect it for freshness.
         try:
@@ -50,7 +50,7 @@ def check_pid(pidfile_path):
             os.unlink(pidfile_path)
     return True
 
-    
+
 
 def _main():
     """pyznap main function. Parses arguments and calls snap/clean/send functions accordingly.
@@ -76,6 +76,8 @@ def _main():
                         dest="dry_run", help='only test run, no action taken')
     parser.add_argument('--syslog', action="store_true",
                         dest="syslog", help='add logging to syslog (INFO)')
+    parser.add_argument('--logconfig', action="store_true",
+                        dest="logconfig", help='add config name to log')
     parser.add_argument('--config', action="store",
                         dest="config", help='path to config file')
     parser.add_argument('-m', '--matching', action="store",
@@ -195,7 +197,11 @@ def _main():
     root_logger = logging.getLogger()
     root_logger.setLevel(basicloglevel)
 
-    console_fmt = logging.Formatter('%(asctime)s %(levelname)s: %(message)s', datefmt='%b %d %H:%M:%S')
+    config_path = args.config if args.config else os.path.join(CONFIG_DIR, 'pyznap.conf')
+    logadd = ' #'+config_path if args.logconfig else '';
+
+
+    console_fmt = logging.Formatter('%(asctime)s %(levelname)s: %(message)s'+logadd, datefmt='%b %d %H:%M:%S')
     if loglevel < logging.WARNING:
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(console_fmt)
@@ -211,7 +217,7 @@ def _main():
         # setup logging to syslog
         syslog_handler = logging.handlers.SysLogHandler(address = '/dev/log',
             facility=logging.handlers.SysLogHandler.LOG_DAEMON)
-        syslog_handler.setFormatter(logging.Formatter('pyznap: [%(levelname)s] %(message)s'))
+        syslog_handler.setFormatter(logging.Formatter('pyznap: [%(levelname)s] %(message)s'+logadd))
         # syslog always level INFO
         syslog_handler.setLevel(logging.INFO)
         root_logger.addHandler(syslog_handler)
@@ -233,7 +239,6 @@ def _main():
         logger.info('Starting pyznap...')
 
         if args.command in ('snap', 'send', 'full', 'status'):
-            config_path = args.config if args.config else os.path.join(CONFIG_DIR, 'pyznap.conf')
             logger.info('Read config={}'.format(config_path))
             config = read_config(config_path)
             if config == None:
@@ -322,7 +327,7 @@ def _main():
                     filter_values=filter_values, filter_exclude=args.filter_exclude, settings=settings)
 
         zfs.STATS.log()
-        logger.info('Finished successfully...\n')
+        logger.info('Finished successfully...')
     finally:
         if args.pidfile is not None:
             os.unlink(args.pidfile)
@@ -342,7 +347,7 @@ def main():
     try:
         return _main()
     except KeyboardInterrupt:
-        logger.error('KeyboardInterrupt - exiting gracefully...\n')
+        logger.error('KeyboardInterrupt - exiting gracefully...')
         return 1
 
 
