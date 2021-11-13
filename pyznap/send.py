@@ -282,7 +282,7 @@ def send_config(config, settings={}):
     logger.info('Sending snapshots...')
 
     for conf in config:
-        if not conf.get('dest', None):
+        if not conf.get('dest', None) or conf.get('dest', None) == ['']:
             logger.debug('Ignore config from send {}...'.format(conf['name']))
             continue
         logger.debug('Process config {}...'.format(conf['name']))
