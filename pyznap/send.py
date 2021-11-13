@@ -364,7 +364,7 @@ def send_config(config, settings={}):
             if source_name == '':
                 dest_children_names = [dest_name+'/'+child.name for child in source_children]
             else:
-                dest_children_names = [child.name.replace(source_name, dest_name) for
+                dest_children_names = [child.name.replace(source_name, dest_name, 1) for
                                     child in source_children]
             # Send all children to corresponding children on dest
             for source_fs, dest_name in zip(source_children, dest_children_names):
