@@ -21,7 +21,8 @@ import pyznap.pyzfs as zfs
 from .process import get_dry_run, DatasetBusyError, DatasetNotFoundError, DatasetExistsError
 
 
-def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=False, resume_token=None):
+def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=False, resume_token=None,
+              send_properties=False):
     """Sends snapshot to destination, incrementally and over ssh if specified.
 
     Parameters:
@@ -58,7 +59,7 @@ def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=F
             ))
             return 0
 
-        send = snapshot.send(ssh_dest=ssh_dest, base=base, intermediates=True, raw=raw, resume_token=resume_token)
+        send = snapshot.send(ssh_dest=ssh_dest, base=base, intermediates=True, properties=send_properties, raw=raw, resume_token=resume_token)
         recv = zfs.receive(name=dest_name, stdin=send.stdout, ssh=ssh_dest, ssh_source=ssh_source,
                            force=True, nomount=True, stream_size=stream_size, raw=raw, resume=resume)
         send.stdout.close()
@@ -92,7 +93,7 @@ def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=F
         return 0
 
 
-def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False, send_last_snapshot=False, dest_auto_create=False):
+def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False, send_last_snapshot=False, send_properties=False, dest_auto_create=False):
     """Checks for common snapshots between source and dest.
     If none are found, send the oldest snapshot, then update with the most recent one.
     If there are common snaps, update destination with the most recent one.
@@ -197,7 +198,8 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
         logger.info('Found resume token. Resuming last transfer of {:s} (~{:s})...'
                     .format(dest_name_log, bytes_fmt(base.stream_size(raw=raw, resume_token=resume_token))))
         was_transfer = True
-        rc = send_snap(base, dest_name, base=None, ssh_dest=ssh_dest, raw=raw, resume=True, resume_token=resume_token)
+        rc = send_snap(base, dest_name, base=None, ssh_dest=ssh_dest, raw=raw, resume=True, resume_token=resume_token,
+                       send_properties=send_properties)
         if rc:
             return rc
         # we need to update common snapshots after finishing the resumable send
@@ -222,7 +224,8 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
                 logger.info('No common snapshots on {:s}, sending oldest snapshot {} (~{:s})...'
                             .format(dest_name_log, base, bytes_fmt(base.stream_size(raw=raw))))
             was_transfer = True
-            rc = send_snap(base, dest_name, base=None, ssh_dest=ssh_dest, raw=raw, resume=resume)
+            rc = send_snap(base, dest_name, base=None, ssh_dest=ssh_dest, raw=raw, resume=resume,
+                           send_properties=send_properties)
             if rc:
                 return rc
     else:
@@ -233,7 +236,8 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
         logger.info('Updating {:s} with recent snapshot {} from {} (~{:s})...'
                     .format(dest_name_log, snapshot, base.name.split('@')[1], bytes_fmt(snapshot.stream_size(base, raw=raw))))
         was_transfer = True
-        rc = send_snap(snapshot, dest_name, base=base, ssh_dest=ssh_dest, raw=raw, resume=resume)
+        rc = send_snap(snapshot, dest_name, base=base, ssh_dest=ssh_dest, raw=raw, resume=resume,
+                       send_properties=send_properties)
         if rc:
             return rc
 
@@ -315,6 +319,7 @@ def send_config(config, settings={}):
             send_last_snapshot = conf['send_last_snapshot'].pop(0) if conf.get('send_last_snapshot', None) else False
             if send_last_snapshot == 'no':
                 send_last_snapshot = False
+            send_properties = conf['send_properties'] if conf.get('send_properties', None) else False
             # check if we should create dataset if it doesn't exist
             dest_auto_create = conf['dest_auto_create'].pop(0) if conf.get('dest_auto_create', None) else False
 
@@ -380,7 +385,7 @@ def send_config(config, settings={}):
                 # send not excluded filesystems
                 for retry in range(1,retries+2):
                     rc = send_filesystem(source_fs, dest_name, ssh_dest=ssh_dest, raw=raw, resume=resume,
-                        send_last_snapshot=send_last_snapshot, dest_auto_create=dest_auto_create)
+                        send_last_snapshot=send_last_snapshot, send_properties=send_properties, dest_auto_create=dest_auto_create)
                     if rc == 2 and retry <= retries:
                         logger.info('Retrying send in {:d}s (retry {:d} of {:d})...'.format(retry_interval, retry, retries))
                         sleep(retry_interval)

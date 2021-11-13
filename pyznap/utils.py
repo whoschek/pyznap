@@ -96,7 +96,7 @@ def read_config(path):
     options = ['key', 'snap', 'clean',
                'dest', 'dest_keys', 'compress', 'exclude', 'raw_send', 'resume', 'dest_auto_create',
                'retries', 'retry_interval', 'ignore_not_existing', 'send_last_snapshot', 'max_depth',
-               'snap_exclude_property', 'send_exclude_property']
+               'snap_exclude_property', 'send_exclude_property', 'send_properties']
     options += list(SNAPSHOT_TYPES)
 
     for section in parser.sections():
@@ -116,7 +116,7 @@ def read_config(path):
                     dic[option] = int(value)
                 elif option in [ 'max_depth']:
                     dic[option] = int(value) if value and value != 'no' else -1
-                elif option in ['snap', 'clean', 'ignore_not_existing']:
+                elif option in ['snap', 'clean', 'ignore_not_existing', 'send_properties']:
                     dic[option] = {'yes': True, 'no': False}.get(value.lower(), None)
                 elif option in ['snap_exclude_property', 'send_exclude_property']:
                     dic[option] = value.strip() if value.strip() else False
@@ -153,7 +153,8 @@ def read_config(path):
                 child_parent = '/'.join(child['name'].split('/')[:-1])  # get parent of child filesystem
                 if child_parent.startswith(parent['name']):
                     for option in ['key', 'snap', 'clean', 'ignore_not_existing', 'send_last_snapshot',
-                        'max_depth', 'snap_exclude_property', 'send_exclude_property'] + list(SNAPSHOT_TYPES):
+                                   'max_depth', 'snap_exclude_property', 'send_exclude_property',
+                                   'send_properties'] + list(SNAPSHOT_TYPES):
                         child[option] = child[option] if child[option] is not None else parent[option]
 
     return config
