@@ -311,7 +311,10 @@ def send_config(config, settings={}):
             # Children includes the base filesystem (named 'source_name')
             source_children = zfs.find_exclude(conf, config, ssh=ssh_source, matching=settings['matching'])
         except DatasetNotFoundError as err:
-            logger.error('Source {:s} does not exist...'.format(source_name_log))
+            if conf.get('ignore_not_existing'):
+                logger.warning('Source {:s} does not exist...'.format(source_name_log))
+            else:
+                logger.error('Source {:s} does not exist...'.format(source_name_log))
             continue
         except ValueError as err:
             logger.error(err)
