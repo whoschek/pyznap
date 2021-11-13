@@ -61,12 +61,17 @@ def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=F
 
         send = snapshot.send(ssh_dest=ssh_dest, base=base, intermediates=True, properties=send_properties, raw=raw, resume_token=resume_token)
 
-        # zfs get keylocation -t snapshot -H -o value $snapshot.name
-        keylocation = zfs.findprops(path=snapshot.name, max_depth=0, props=['keylocation'],
-                                    types=['snapshot'])[snapshot.name]['keylocation'][0]
         recv_properties = None
-        if keylocation != '-' and keylocation != 'prompt':
-            recv_properties = {'keylocation': keylocation}
+        is_encrypted = zfs.findprops(path=snapshot.fsname(), max_depth=0, props=['encryption'],
+                                     types=['filesystem'])[snapshot.fsname()]['encryption'][0] != 'off'
+        if is_encrypted:
+            encryptionroot = zfs.findprops(path=snapshot.fsname(), max_depth=0, props=['encryptionroot'],
+                                           types=['filesystem'])[snapshot.fsname()]['encryptionroot'][0]
+            keylocation = zfs.findprops(path=encryptionroot, max_depth=0, props=['keylocation'],
+                                        types=['filesystem'])[encryptionroot]['keylocation'][0]
+            # logger.debug('keylocation: {} of root: {} for: {}'.format(keylocation, encryptionroot, snapshot.fsname()))
+            # if keylocation != '-' and keylocation != 'prompt':
+            #     recv_properties = {'keylocation': keylocation}
 
         recv = zfs.receive(name=dest_name, stdin=send.stdout, ssh=ssh_dest, ssh_source=ssh_source,
                            force=True, nomount=True, stream_size=stream_size, raw=raw, resume=resume,
@@ -88,7 +93,7 @@ def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=F
         if recv.returncode:
             raise CalledProcessError(returncode=recv.returncode, cmd=recv.args, output=stdout, stderr=stderr)
 
-        if keylocation != '-':
+        if is_encrypted and keylocation != '-':
             dataset = zfs.open(dest_name, ssh=ssh_dest)
             dataset.setprop('keylocation', keylocation)
 
