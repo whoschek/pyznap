@@ -161,17 +161,10 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
         logger.error('No snapshots on {}, cannot send...'.format(source_fs))
         return 1
 
+    dest_fs = None
     try:
         dest_fs = zfs.open(dest_name, ssh=ssh_dest)
     except DatasetNotFoundError:
-        if dest_auto_create:
-            logger.info('Destination {:s} does not exist, will create it...'.format(dest_name_log))
-            if create_dataset(dest_name, dest_name_log, ssh=ssh_dest):
-                return 1
-        else:
-            logger.error('Destination {:s} does not exist, manually create it or use "dest-auto-create" option...'
-                            .format(dest_name_log))
-            return 1
         dest_snapnames = []
         common = set()
     except CalledProcessError as err:
@@ -236,6 +229,12 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
             else:
                 logger.info('No common snapshots on {:s}, sending oldest snapshot {} (~{:s})...'
                             .format(dest_name_log, base, bytes_fmt(base.stream_size(raw=raw))))
+
+            if dest_fs and source_fs.getpropval('encryption', default='off') != 'off' \
+                    and len(zfs.find(path=dest_name, ssh=ssh_dest, max_depth=None, types=['snapshot'])) == 0:
+                # workaround for https://bit.ly/2ZXJee5 - dataset will be recreated by send_snap()
+                dest_fs.destroy(force=True)
+
             was_transfer = True
             rc = send_snap(base, dest_name, base=None, ssh_dest=ssh_dest, raw=raw, resume=resume,
                            send_properties=send_properties)
@@ -365,7 +364,9 @@ def send_config(config, settings={}):
                 if dest_auto_create:
                     logger.info('Destination {:s} does not exist, will create it...'.format(dest_name_log))
                     if create_dataset(dest_name, dest_name_log, ssh=ssh_dest):
-                        continue
+                        # only create tree until parent as dest_name will later be auto-created by send_filesystem()
+                        zfs.open(dest_name, ssh=ssh_dest).destroy()
+                        # no need to skip this destination or error out
                 else:
                     logger.error('Destination {:s} does not exist, manually create it or use "dest-auto-create" option...'
                                  .format(dest_name_log))
