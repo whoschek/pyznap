@@ -241,6 +241,13 @@ def send_filesystem(source_fs, dest_name, ssh_dest=None, raw=False, resume=False
             if rc:
                 return rc
     else:
+        # see --forbidDestRollback at https://github.com/oetiker/znapzend/blob/master/doc/znapzend.pod
+        forbid_dest_rollback = True
+        if forbid_dest_rollback and not dest_snapnames[-1] in snapnames:
+            logger.error('Most recent snapshot {}@{} no more exists on src in {}. Not sending...'
+                         .format(dest_name_log, dest_snapnames[-1], source_fs))
+            return 1
+
         # If there are common snapshots, get the most recent one
         base = next(filter(lambda x: x.name.split('@')[1] in common, snapshots), None)
 
