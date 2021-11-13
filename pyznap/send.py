@@ -60,8 +60,17 @@ def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=F
             return 0
 
         send = snapshot.send(ssh_dest=ssh_dest, base=base, intermediates=True, properties=send_properties, raw=raw, resume_token=resume_token)
+
+        # zfs get keylocation -t snapshot -H -o value $snapshot.name
+        keylocation = zfs.findprops(path=snapshot.name, max_depth=0, props=['keylocation'],
+                                    types=['snapshot'])[snapshot.name]['keylocation'][0]
+        recv_properties = None
+        if keylocation != '-' and keylocation != 'prompt':
+            recv_properties = {'keylocation': keylocation}
+
         recv = zfs.receive(name=dest_name, stdin=send.stdout, ssh=ssh_dest, ssh_source=ssh_source,
-                           force=True, nomount=True, stream_size=stream_size, raw=raw, resume=resume)
+                           force=True, nomount=True, stream_size=stream_size, raw=raw, resume=resume,
+                           properties=recv_properties)
         send.stdout.close()
 
         # write pv output to stderr / stdout
@@ -78,6 +87,10 @@ def send_snap(snapshot, dest_name, base=None, ssh_dest=None, raw=False, resume=F
         # raise any error that occurred
         if recv.returncode:
             raise CalledProcessError(returncode=recv.returncode, cmd=recv.args, output=stdout, stderr=stderr)
+
+        if keylocation != '-':
+            dataset = zfs.open(dest_name, ssh=ssh_dest)
+            dataset.setprop('keylocation', keylocation)
 
     except (DatasetNotFoundError, DatasetExistsError, DatasetBusyError, OSError, EOFError) as err:
         logger.error('Error while sending to {:s}: {}...'.format(dest_name_log, err))

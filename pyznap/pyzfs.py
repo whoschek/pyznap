@@ -228,7 +228,7 @@ def create(name, ssh=None, type='filesystem', props={}, force=False):
 
 
 def receive(name, stdin, ssh=None, ssh_source=None, append_name=False, append_path=False,
-            force=False, nomount=False, stream_size=0, raw=False, resume=False):
+            force=False, nomount=False, stream_size=0, raw=False, resume=False, properties=None):
     """Returns Popen instance for zfs receive"""
     logger = logging.getLogger(__name__)
 
@@ -263,6 +263,10 @@ def receive(name, stdin, ssh=None, ssh_source=None, append_name=False, append_pa
 
     if force:
         cmd.append('-F')
+    if properties:
+        for key, value in properties.items():
+            cmd.append('-o')
+            cmd.append("'{}={}'".format(key, value))
     if nomount:
         cmd.append('-u')
     if resume:
