@@ -85,34 +85,34 @@ def take_filesystem(filesystem, conf):
     for snaps in snapshots.values():
         snaps.reverse()
 
-    if conf['yearly'] and (not snapshots['yearly'] or
-                           snapshots['yearly'][0][1].year != now().year):
-        take_snap(filesystem, 'yearly')
-
-    if conf['monthly'] and (not snapshots['monthly'] or
-                            snapshots['monthly'][0][1].month != now().month or
-                            now() - snapshots['monthly'][0][1] > timedelta(days=31)):
-        take_snap(filesystem, 'monthly')
-
-    if conf['weekly'] and (not snapshots['weekly'] or
-                           snapshots['weekly'][0][1].isocalendar()[1] != now().isocalendar()[1] or
-                           now() - snapshots['weekly'][0][1] > timedelta(days=7)):
-        take_snap(filesystem, 'weekly')
-
-    if conf['daily'] and (not snapshots['daily'] or
-                          snapshots['daily'][0][1].day != now().day or
-                          now() - snapshots['daily'][0][1] > timedelta(days=1)):
-        take_snap(filesystem, 'daily')
+    if conf['frequent'] and (not snapshots['frequent'] or
+                             snapshots['frequent'][0][1].minute != now().minute or
+                             now() - snapshots['frequent'][0][1] > timedelta(minutes=1)):
+        take_snap(filesystem, 'frequent')
 
     if conf['hourly'] and (not snapshots['hourly'] or
                            snapshots['hourly'][0][1].hour != now().hour or
                            now() - snapshots['hourly'][0][1] > timedelta(hours=1)):
         take_snap(filesystem, 'hourly')
 
-    if conf['frequent'] and (not snapshots['frequent'] or
-                             snapshots['frequent'][0][1].minute != now().minute or
-                             now() - snapshots['frequent'][0][1] > timedelta(minutes=1)):
-        take_snap(filesystem, 'frequent')
+    if conf['daily'] and (not snapshots['daily'] or
+                          snapshots['daily'][0][1].day != now().day or
+                          now() - snapshots['daily'][0][1] > timedelta(days=1)):
+        take_snap(filesystem, 'daily')
+
+    if conf['weekly'] and (not snapshots['weekly'] or
+                           snapshots['weekly'][0][1].isocalendar()[1] != now().isocalendar()[1] or
+                           now() - snapshots['weekly'][0][1] > timedelta(days=7)):
+        take_snap(filesystem, 'weekly')
+
+    if conf['monthly'] and (not snapshots['monthly'] or
+                            snapshots['monthly'][0][1].month != now().month or
+                            now() - snapshots['monthly'][0][1] > timedelta(days=31)):
+        take_snap(filesystem, 'monthly')
+
+    if conf['yearly'] and (not snapshots['yearly'] or
+                           snapshots['yearly'][0][1].year != now().year):
+        take_snap(filesystem, 'yearly')
 
 
 def take_config(config, settings={}):
