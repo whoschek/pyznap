@@ -153,8 +153,8 @@ Here is a list of all options you can set in the config fie:
 | `dest_key`              | List of string  | Path to ssh keyfile for dest. Comma-separated list for multiple dest |
 | `compress`              | List of string  | Compression to use over ssh, supported are none, gzip, lzop, bzip2, pigz, xz & lz4. Default is lzop. Comma-separated list for multiple dest |
 | `exclude`               | List of string  | Whitespace-separated list of datasets to exclude from sending. Exclude lists for different dests are separated by comma |
-| `raw_send`              | List of yes/no  | Use zfs raw send. Comma-separated list for multiple dest |
-| `resume`                | List of yes/no  | Use resumable send/receive. Comma-separated list for multiple dest |
+| `raw_send`              | List of yes/no  | Use zfs raw send (supported from ZFS 0.8.0). Comma-separated list for multiple dest |
+| `resume`                | List of yes/no  | Use resumable send/receive (supported from ZFS 0.7.0). Comma-separated list for multiple dest |
 | `dest_auto_create`      | List of yes/no  | Automatically create missing root datasets. Comma-separated list for multiple dest |
 | `retries`               | List of integer | Number of retries on connection issues. Comma-separated list for multiple dest |
 | `retry_interval`        | List of integer | Time in seconds between retries. Comma-separated list for multiple dest |
